@@ -1,0 +1,62 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: '**/package-lock.json'
+
+    # Backend
+    - name: Install Backend Dependencies
+      run: |
+        cd backend
+        npm ci
+
+    - name: Generate Prisma Client
+      run: |
+        cd backend
+        npx prisma generate
+
+    - name: Build Backend
+      run: |
+        cd backend
+        npm run build
+
+    - name: Test Backend
+      run: |
+        cd backend
+        npm run test
+
+    # Frontend
+    - name: Install Frontend Dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Build Frontend
+      run: |
+        cd frontend
+        npm run build
+
+    # Deploy step (Placeholder)
+    # - name: Deploy
+    #   if: github.ref == 'refs/heads/main'
+    #   run: echo "Deploying to production..."

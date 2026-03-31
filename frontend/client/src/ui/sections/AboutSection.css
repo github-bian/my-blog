@@ -1,0 +1,157 @@
+.aboutProfileCard {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 240px 1fr 300px;
+  gap: 40px;
+  align-items: center;
+  padding: 40px;
+}
+
+@media (max-width: 920px) {
+  .aboutProfileCard {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 30px;
+  }
+}
+
+.aboutAvatarWrap {
+  display: flex;
+  justify-content: center;
+}
+
+.aboutAvatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+  background: var(--glass);
+  border: 2px solid var(--glassBorder);
+}
+
+.aboutAvatar:hover {
+  transform: rotate(360deg);
+}
+
+.aboutInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 920px) {
+  .aboutInfo {
+    align-items: center;
+  }
+}
+
+.aboutName {
+  font-size: 24px;
+  color: var(--text);
+  margin: 0;
+  font-weight: 600;
+}
+
+.aboutTitle {
+  font-size: 16px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.aboutHobbies {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 920px) {
+  .aboutHobbies {
+    justify-content: center;
+  }
+}
+
+.hobbyItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+}
+
+.hobbyIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--glass);
+  border: 1px solid var(--glassBorder);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.hobbyLabel {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.aboutSkills {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+@media (max-width: 920px) {
+  .aboutSkills {
+    align-items: center;
+  }
+}
+
+.aboutSkillsTitle {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text);
+}
+
+.skillsCloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 920px) {
+  .skillsCloud {
+    justify-content: center;
+  }
+}
+
+.skillTag {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.skillTag:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+.skillTag.beginner {
+  background-color: #e0e0e0;
+}
+
+.skillTag.intermediate {
+  background-color: #90caf9;
+}
+
+.skillTag.advanced {
+  background-color: #66bb6a;
+}

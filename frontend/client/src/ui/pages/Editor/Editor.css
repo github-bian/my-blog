@@ -1,0 +1,141 @@
+/* ================================================================== */
+/*  Editor Page – 协作编辑器页面布局                                       */
+/* ================================================================== */
+
+.editorPage {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 32px 0 80px;
+}
+
+.editorCard {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ---- 顶部信息 ---- */
+.editorHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.editorHeader__left {
+  flex: 1;
+  min-width: 0;
+}
+
+.editorEyebrow {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.editorTitle {
+  margin: 0;
+  font-size: clamp(28px, 3.5vw, 42px);
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.editorLead {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 50ch;
+  font-size: 14px;
+}
+
+/* ---- 统计卡片 ---- */
+.editorStats {
+  display: flex;
+  gap: 20px;
+  padding: 16px 24px;
+  flex-shrink: 0;
+}
+
+.editorStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.editorStat__value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.1;
+}
+
+.editorStat__label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ---- 元数据表单 ---- */
+.editorMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.editorMetaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.editorSummary {
+  min-height: 72px;
+}
+
+/* ---- 操作按钮 ---- */
+.editorActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.magneticButton--ghost {
+  background: transparent;
+  border: 1px solid var(--glass);
+}
+
+/* ================================================================== */
+/*  响应式                                                              */
+/* ================================================================== */
+@media (max-width: 900px) {
+  .editorHeader {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .editorMetaGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .editorPage {
+    padding: 12px 0 40px;
+  }
+  .editorCard {
+    padding: 20px;
+  }
+  .editorStats {
+    padding: 12px 16px;
+  }
+  .editorActions {
+    justify-content: stretch;
+  }
+  .editorActions .magneticButton {
+    width: 100%;
+    justify-content: center;
+  }
+}

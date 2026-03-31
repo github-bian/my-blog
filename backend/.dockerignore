@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+*.pyo
+instance/
+.env
+.venv/
+*.egg-info/
+migrations/versions/__pycache__/

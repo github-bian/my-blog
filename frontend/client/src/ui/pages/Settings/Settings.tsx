@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../auth/auth";
+import { apiJson } from "../../lib/api";
 import "./Settings.css";
 import { MagneticButton } from "../../components/MagneticButton";
 
@@ -89,18 +90,23 @@ export default function Settings() {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call for uploading avatar and saving profile
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      
-      // Update global context
+      const res = await apiJson<{ user: any }>("/api/v1/users/me", {
+        method: "PUT",
+        body: JSON.stringify({
+          displayName: username.trim(),
+          avatarUrl: avatarPreview,
+        }),
+        token: state?.accessToken,
+      });
+
+      // Update global context with returned data
       if (updateProfile) {
         updateProfile({
-          displayName: username,
-          avatarUrl: avatarPreview,
-          description: description
+          displayName: res.user.display_name ?? username,
+          avatarUrl: res.user.avatar_url ?? avatarPreview,
         } as any);
       }
-      
+
       setSuccessMsg("个人资料保存成功");
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch (err: any) {

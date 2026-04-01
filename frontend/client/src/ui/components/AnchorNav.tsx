@@ -9,6 +9,7 @@ type NavItem = { label: string; to: string };
 
 const items: NavItem[] = [
   { label: "首页", to: "/" },
+  { label: "仪表盘", to: "/dashboard" },
   { label: "归档", to: "/archive" },
   { label: "关于", to: "/about" },
 ];

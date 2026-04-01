@@ -16,6 +16,7 @@ const About = lazy(() => import("./pages/About/About"));
 const UserProfile = lazy(() => import("./pages/User/UserProfile"));
 const Editor = lazy(() => import("./pages/Editor/Editor"));
 const Settings = lazy(() => import("./pages/Settings/Settings"));
+const Dashboard = lazy(() => import("./pages/Dashboard/Dashboard"));
 
 export function App() {
   const reducedMotion = usePrefersReducedMotion();
@@ -71,6 +72,7 @@ export function App() {
           <Route path="login" element={<Login />} />
           <Route path="editor" element={<Editor />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="dashboard" element={<Dashboard />} />
         </Route>
       </Routes>
     </AuthProvider>

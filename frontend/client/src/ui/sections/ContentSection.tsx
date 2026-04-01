@@ -2,11 +2,9 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { useAuth } from "../auth/auth";
-import { ApiError } from "../lib/api";
 import { MagneticButton } from "../components/MagneticButton";
 import { extractCoverFromContent, excerptFromContent } from "../components/MarkdownArticle";
 import { usePostsQuery } from "../hooks/queries/usePosts";
-import SplitText from "../components/reactbits/SplitText";
 import { useCategoriesQuery, useTagsQuery } from "../hooks/queries/useTaxonomies";
 
 export default function ContentSection() {
@@ -73,21 +71,7 @@ export default function ContentSection() {
 
   return (
     <section id="content" className="section">
-      <div className="glassCard reveal" style={{ minHeight: "600px" }}>
-        <div className="sectionHeaderRow">
-          <h2 className="sectionTitle">
-            <SplitText text="博客文章" delay={40} duration={0.8} />
-          </h2>
-          {isAuthed && (
-            <MagneticButton onClick={() => navigate("/editor")} ariaLabel="打开发布文章面板">
-              发布文章
-            </MagneticButton>
-          )}
-        </div>
-        <p className="sectionLead" style={{ marginBottom: "40px" }}>
-          记录思考与发现，分享技术与生活。
-        </p>
-
+      <div className="glassCard reveal">
         <div className="taxBar">
           <div className="taxRow">
             <div className="taxLabel">分类</div>
@@ -157,6 +141,11 @@ export default function ContentSection() {
                 清空
               </button>
             </div>
+            {isAuthed && (
+              <MagneticButton onClick={() => navigate("/editor")} ariaLabel="打开发布文章面板">
+                发布文章
+              </MagneticButton>
+            )}
           </div>
         </div>
 

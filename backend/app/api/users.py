@@ -12,9 +12,10 @@
 3. RESTful 风格的 URL 设计
 """
 
-from flask import Blueprint, abort, jsonify
+from flask import Blueprint, abort, jsonify, request
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
+from ..extensions import db
 from ..models import User
 
 # 用户相关接口统一挂在 /api/v1/users 下
@@ -49,6 +50,32 @@ def me():
     user = User.query.get(int(user_id))
     if not user:
         abort(404, description="User not found")
+    return jsonify({"user": user.to_public_dict()})
+
+
+@users_bp.put("/me")
+@jwt_required()
+def update_me():
+    """更新当前登录用户的个人资料"""
+    user_id = get_jwt_identity()
+    user = User.query.get(int(user_id))
+    if not user:
+        abort(404, description="User not found")
+
+    data = request.get_json(silent=True) or {}
+
+    display_name = data.get("displayName")
+    if display_name is not None:
+        display_name = str(display_name).strip()
+        if not display_name or len(display_name) > 30:
+            abort(400, description="用户名不能为空且不超过 30 个字符")
+        user.display_name = display_name
+
+    avatar_url = data.get("avatarUrl")
+    if avatar_url is not None:
+        user.avatar_url = str(avatar_url)[:2048] if avatar_url else None
+
+    db.session.commit()
     return jsonify({"user": user.to_public_dict()})
 
 

@@ -5,9 +5,9 @@
 # ============================================================
 set -euo pipefail
 
-SERVER_IP="47.116.213.118"
-SERVER_USER="root"
-SERVER_PASS="Bian2580@"
+SERVER_IP="${SERVER_IP:-47.116.213.118}"
+SERVER_USER="${SERVER_USER:-root}"
+SERVER_PASS="${SERVER_PASS:?请设置 SERVER_PASS 环境变量，例如: SERVER_PASS=xxx bash deploy/deploy.sh}"
 REMOTE_DIR="/opt/blog"
 export SSHPASS="$SERVER_PASS"
 SSH_CMD="sshpass -e ssh -o StrictHostKeyChecking=no"

@@ -2,7 +2,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { usePostQuery } from "../../hooks/queries/usePosts";
 import { MagneticButton } from "../../components/MagneticButton";
 import { useAuth } from "../../auth/auth";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { apiJson, ApiError } from "../../lib/api";
 import { MarkdownArticle } from "../../components/MarkdownArticle";
 
@@ -46,7 +46,7 @@ export default function PostDetail() {
   const { data: postData, isLoading, error } = usePostQuery(id ?? "");
   const { state, isAuthed } = useAuth();
 
-  const post = (postData as any)?.post ?? postData;
+  const post = postData;
 
   // 点赞状态
   const [likesCount, setLikesCount] = useState(0);
@@ -79,6 +79,9 @@ export default function PostDetail() {
       setCommentsLoading(false);
     }
   }, [id]);
+
+  // 组件加载时获取评论
+  useEffect(() => { loadComments(); }, [loadComments]);
 
   // 点赞文章
   const handleLike = useCallback(async () => {

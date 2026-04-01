@@ -7,7 +7,8 @@ COPY frontend/package.json frontend/package-lock.json* ./frontend/
 COPY frontend/client/package.json ./frontend/client/
 
 WORKDIR /app/frontend
-RUN npm ci --legacy-peer-deps 2>/dev/null || npm install --legacy-peer-deps
+RUN npm config set registry https://registry.npmmirror.com && \
+    (npm ci --legacy-peer-deps 2>/dev/null || npm install --legacy-peer-deps)
 
 # 复制协作服务器脚本
 COPY frontend/collab-server.mjs ./collab-server.mjs

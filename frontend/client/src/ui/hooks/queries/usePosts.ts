@@ -60,7 +60,10 @@ export function usePostsQuery(params?: {
 export function usePostQuery(id: string | number) {
   return useQuery({
     queryKey: ["posts", id],
-    queryFn: () => apiJson<Post>(`/api/v1/posts/${id}`),
+    queryFn: async () => {
+      const res = await apiJson<{ post: Post }>(`/api/v1/posts/${id}`);
+      return res.post;
+    },
     enabled: !!id,
   });
 }

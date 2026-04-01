@@ -7,7 +7,11 @@ set -euo pipefail
 
 SERVER_IP="47.116.213.118"
 SERVER_USER="root"
+SERVER_PASS="Bian2580@"
 REMOTE_DIR="/opt/blog"
+export SSHPASS="$SERVER_PASS"
+SSH_CMD="sshpass -e ssh -o StrictHostKeyChecking=no"
+SCP_CMD="sshpass -e scp -o StrictHostKeyChecking=no"
 
 echo "========================================="
 echo "  博客项目部署脚本"
@@ -18,12 +22,12 @@ echo "========================================="
 # 1) 在远程服务器上创建目录
 echo ""
 echo "[1/5] 创建远程目录..."
-ssh ${SERVER_USER}@${SERVER_IP} "mkdir -p ${REMOTE_DIR}"
+${SSH_CMD} ${SERVER_USER}@${SERVER_IP} "mkdir -p ${REMOTE_DIR}"
 
 # 2) 同步项目文件（排除不需要的目录）
 echo ""
 echo "[2/5] 同步项目文件到服务器..."
-rsync -avz --progress \
+rsync -avz --progress -e "sshpass -e ssh -o StrictHostKeyChecking=no" \
   --exclude='node_modules' \
   --exclude='.venv' \
   --exclude='__pycache__' \
@@ -38,12 +42,12 @@ rsync -avz --progress \
 # 3) 复制生产环境变量
 echo ""
 echo "[3/5] 复制环境变量文件..."
-scp deploy/.env.production ${SERVER_USER}@${SERVER_IP}:${REMOTE_DIR}/.env
+${SCP_CMD} deploy/.env.production ${SERVER_USER}@${SERVER_IP}:${REMOTE_DIR}/.env
 
 # 4) 在远程服务器上构建 & 启动
 echo ""
 echo "[4/5] 在远程服务器上构建并启动 Docker 容器..."
-ssh ${SERVER_USER}@${SERVER_IP} << 'REMOTE_SCRIPT'
+${SSH_CMD} ${SERVER_USER}@${SERVER_IP} << 'REMOTE_SCRIPT'
 set -euo pipefail
 cd /opt/blog
 
@@ -58,8 +62,9 @@ fi
 # 停止旧容器（如有）
 docker compose -f docker-compose.prod.yml down 2>/dev/null || true
 
-# 构建并启动
-docker compose -f docker-compose.prod.yml up -d --build
+# 构建并启动（清除缓存确保依赖更新）
+docker compose -f docker-compose.prod.yml build --no-cache
+docker compose -f docker-compose.prod.yml up -d
 
 echo ""
 echo "等待服务启动..."

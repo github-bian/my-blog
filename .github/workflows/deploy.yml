@@ -1,0 +1,69 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [main, pro]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            set -e
+            REMOTE_DIR="/opt/blog"
+            mkdir -p $REMOTE_DIR
+
+      - name: Sync files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          source: ".,!.git,!node_modules,!.venv,!__pycache__,!*.pyc,!frontend/client/dist,!frontend/client/node_modules,!frontend/node_modules"
+          target: "/opt/blog"
+          overwrite: true
+
+      - name: Copy env & build & start
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          command_timeout: 20m
+          script: |
+            set -e
+            cd /opt/blog
+
+            # 复制生产环境变量
+            cp deploy/.env.production .env
+
+            # 确保 Docker 可用
+            if ! command -v docker &> /dev/null; then
+                echo "安装 Docker..."
+                curl -fsSL https://get.docker.com | sh
+                systemctl enable docker
+                systemctl start docker
+            fi
+
+            # 停止旧容器
+            docker compose -f docker-compose.prod.yml down 2>/dev/null || true
+
+            # 构建并启动
+            docker compose -f docker-compose.prod.yml up -d --build
+
+            # 等待服务启动
+            sleep 15
+
+            # 检查容器状态
+            docker compose -f docker-compose.prod.yml ps
+
+            echo "部署完成！"

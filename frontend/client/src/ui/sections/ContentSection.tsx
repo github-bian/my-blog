@@ -1,8 +1,21 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  Button,
+  Card,
+  Col,
+  Empty,
+  Input,
+  Row,
+  Select,
+  Skeleton,
+  Space,
+  Tag,
+  Typography,
+} from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 
 import { useAuth } from "../auth/auth";
-import { MagneticButton } from "../components/MagneticButton";
 import { extractCoverFromContent, excerptFromContent } from "../components/MarkdownArticle";
 import { usePostsQuery } from "../hooks/queries/usePosts";
 import { useCategoriesQuery, useTagsQuery } from "../hooks/queries/useTaxonomies";
@@ -26,6 +39,26 @@ export default function ContentSection() {
     offset: 0,
   });
   const posts = data?.items || [];
+
+  const featuredPosts = [...posts]
+    .sort((a, b) => b.likesCount + b.viewCount - (a.likesCount + a.viewCount))
+    .slice(0, 3);
+
+  const latestPosts = [...posts]
+    .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
+    .slice(0, 5);
+
+  const hotTagRank = posts
+    .flatMap((post) => post.tags ?? [])
+    .reduce<Record<string, { id: number; name: string; count: number }>>((acc, tag) => {
+      const hit = acc[String(tag.id)] ?? { id: tag.id, name: tag.name, count: 0 };
+      hit.count += 1;
+      acc[String(tag.id)] = hit;
+      return acc;
+    }, {});
+  const hotTags = Object.values(hotTagRank)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
 
   const categoriesQuery = useCategoriesQuery();
   const tagsQuery = useTagsQuery();
@@ -69,167 +102,243 @@ export default function ContentSection() {
     setSearchParams(params, { replace: false });
   }
 
+  const categoryOptions = [
+    { label: "全部分类", value: 0 },
+    ...((categoriesQuery.data?.items ?? []).map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) ?? []),
+  ];
+
+  const tagOptions = [
+    { label: "全部标签", value: 0 },
+    ...((tagsQuery.data?.items ?? []).map((item) => ({
+      label: item.name,
+      value: item.id,
+    })) ?? []),
+  ];
+
   return (
-    <section id="content" className="section">
-      <div className="glassCard reveal">
-        <div className="taxBar">
-          <div className="taxRow">
-            <div className="taxLabel">分类</div>
-            <div className="taxChips" role="list" aria-label="分类筛选">
-              <button
-                type="button"
-                className={["chip", !categoryId ? "chip--active" : ""].filter(Boolean).join(" ")}
-                onClick={() => applyFilters({ categoryId: undefined, tagId, q: searchInput })}
-              >
-                全部
-              </button>
-              {(categoriesQuery.data?.items ?? []).map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  className={["chip", categoryId === c.id ? "chip--active" : ""].filter(Boolean).join(" ")}
-                  aria-pressed={categoryId === c.id}
-                  onClick={() => applyFilters({ categoryId: c.id, tagId: undefined, q: searchInput })}
-                >
-                  {c.name}
-                </button>
-              ))}
-            </div>
-          </div>
+    <section id="content" className="homeSection">
+      <Card className="blogPageCard blogHeroCard" styles={{ body: { padding: 24 } }}>
+        <Space direction="vertical" size={8}>
+          <Typography.Text className="blogHeroKicker">Personal Writing Space</Typography.Text>
+          <Typography.Title level={2} style={{ margin: 0 }}>
+            记录思考、分享经验、持续创作
+          </Typography.Title>
+          <Typography.Text type="secondary">
+            一个专注内容阅读与创作流程的博客系统，支持 Markdown、分类标签和文章检索。
+          </Typography.Text>
+        </Space>
+      </Card>
 
-          <div className="taxRow">
-            <div className="taxLabel">标签</div>
-            <div className="taxChips" role="list" aria-label="标签筛选">
-              <button
-                type="button"
-                className={["chip", !tagId ? "chip--active" : ""].filter(Boolean).join(" ")}
-                onClick={() => applyFilters({ categoryId, tagId: undefined, q: searchInput })}
-              >
-                全部
-              </button>
-              {(tagsQuery.data?.items ?? []).slice(0, 18).map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  className={["chip", tagId === t.id ? "chip--active" : ""].filter(Boolean).join(" ")}
-                  aria-pressed={tagId === t.id}
-                  onClick={() => applyFilters({ categoryId: undefined, tagId: t.id, q: searchInput })}
-                >
-                  {t.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="taxRow taxRow--search">
-            <div className="taxLabel">搜索</div>
-            <div className="taxSearch">
-              <input
-                className="input"
-                placeholder="搜索标题或正文…"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-              />
-              <button
-                type="button"
-                className="textButton"
-                onClick={() => {
-                  setSearchInput("");
-                  applyFilters({ categoryId: undefined, tagId: undefined, q: "" });
-                }}
-              >
-                清空
-              </button>
-            </div>
-            {isAuthed && (
-              <MagneticButton onClick={() => navigate("/editor")} ariaLabel="打开发布文章面板">
-                发布文章
-              </MagneticButton>
-            )}
-          </div>
-        </div>
-
-        {/* loading 时用骨架屏占位，避免布局抖动 */}
-        {loading && (
-          <div className="grid3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="glassCard glassCard--nested skeletonCard" style={{ height: "200px" }} />
-            ))}
-          </div>
-        )}
-
-        {!loading && error && (
-          <div className="form">
-            <div className="errorNote">{error instanceof Error ? error.message : "加载失败"}</div>
-            <div>
-              <MagneticButton onClick={() => void refetch()} ariaLabel="重试加载内容">
-                重试加载
-              </MagneticButton>
-            </div>
-          </div>
-        )}
-
-        {/* 有数据才渲染列表 */}
-        {!loading && !error && (
-          <div className="grid3">
-            {posts.map((p, i) => (
-              <Link
-                key={p.id}
-                to={`/posts/${p.id}`}
-                className="postCardButton postCardEnter"
-                aria-label={`查看文章：${p.title}`}
-                style={{
-                  display: "block",
-                  textDecoration: "none",
-                  color: "inherit",
-                  textAlign: "left",
-                  animationDelay: `${i * 70}ms`,
-                }}
-              >
-                <article className="glassCard glassCard--nested">
-                  <div className="postCoverWrap">
-                    {extractCoverFromContent(p.content) ? (
-                      <img
-                        className="postCoverImg"
-                        src={extractCoverFromContent(p.content) as string}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        referrerPolicy="no-referrer"
-                      />
-                    ) : (
-                      <div className="postCoverPlaceholder" aria-hidden="true" />
-                    )}
-                  </div>
-                  <div className="postCardBody">
-                    <h3 className="cardTitle">{p.title}</h3>
-                    <p className="cardDesc clamp3">{(p.summary ?? excerptFromContent(p.content)) || ""}</p>
-                    <div className="metaRow" style={{ marginTop: "auto", paddingTop: "14px" }}>
-                      <span className="metaText">
-                        {new Date(p.createdAt).toLocaleDateString()}
-                      </span>
-                    {p.viewCount > 0 && (
-                      <span className="metaText" style={{ marginLeft: "12px" }}>
-                        {p.viewCount} 阅读
-                      </span>
-                    )}
-                    {p.likesCount > 0 && (
-                      <span className="metaText" style={{ marginLeft: "12px" }}>
-                        {p.likesCount} 赞
-                      </span>
-                    )}
+      <Row gutter={[16, 16]}>
+        <Col xs={24} lg={16}>
+          <Card className="blogPageCard blogRecommendCard" title="推荐阅读">
+            {featuredPosts.length === 0 ? (
+              <Empty description="暂无推荐文章" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            ) : (
+              <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                {featuredPosts.map((post, index) => (
+                  <Link key={post.id} to={`/posts/${post.id}`} className="blogRecommendItem">
+                    <div className="blogRecommendIndex">{String(index + 1).padStart(2, "0")}</div>
+                    <div className="blogRecommendMain">
+                      <Typography.Text strong>{post.title}</Typography.Text>
+                      <Typography.Paragraph
+                        type="secondary"
+                        ellipsis={{ rows: 2 }}
+                        style={{ marginBottom: 0 }}
+                      >
+                        {(post.summary ?? excerptFromContent(post.content)) || ""}
+                      </Typography.Paragraph>
                     </div>
-                  </div>
-                </article>
-              </Link>
-            ))}
-          </div>
-        )}
+                    <Tag>{post.viewCount} 阅读</Tag>
+                  </Link>
+                ))}
+              </Space>
+            )}
+          </Card>
+        </Col>
 
-        {!loading && !error && posts.length === 0 && (
-          <div className="hintText">还没有文章，登录后发第一篇吧。</div>
-        )}
-      </div>
+        <Col xs={24} lg={8}>
+          <Card className="blogPageCard blogHotTagsCard" title="热门标签">
+            <Space wrap>
+              {hotTags.length > 0
+                ? hotTags.map((tag) => (
+                    <Tag
+                      key={tag.id}
+                      color="blue"
+                      className="blogHotTag"
+                      onClick={() => applyFilters({ categoryId, tagId: tag.id, q: searchInput })}
+                    >
+                      {tag.name} {tag.count}
+                    </Tag>
+                  ))
+                : (tagsQuery.data?.items ?? []).slice(0, 10).map((tag) => (
+                    <Tag
+                      key={tag.id}
+                      className="blogHotTag"
+                      onClick={() => applyFilters({ categoryId, tagId: tag.id, q: searchInput })}
+                    >
+                      {tag.name}
+                    </Tag>
+                  ))}
+            </Space>
+
+            <div className="blogLatestBlock">
+              <Typography.Text strong>最新发布</Typography.Text>
+              <Space direction="vertical" size={8} style={{ width: "100%", marginTop: 10 }}>
+                {latestPosts.length > 0 ? (
+                  latestPosts.map((post) => (
+                    <Link key={post.id} to={`/posts/${post.id}`} className="blogLatestItem">
+                      <Typography.Text>{post.title}</Typography.Text>
+                      <Typography.Text type="secondary" className="blogLatestDate">
+                        {new Date(post.createdAt).toLocaleDateString()}
+                      </Typography.Text>
+                    </Link>
+                  ))
+                ) : (
+                  <Typography.Text type="secondary">暂无文章</Typography.Text>
+                )}
+              </Space>
+            </div>
+          </Card>
+        </Col>
+      </Row>
+
+      <Card className="blogPageCard blogFeedCard" styles={{ body: { padding: 24 } }}>
+        <Space direction="vertical" size={18} style={{ width: "100%" }}>
+          <div className="blogFeedHeader">
+            <div>
+              <Typography.Title level={3} style={{ margin: 0 }}>
+                博客文章
+              </Typography.Title>
+              <Typography.Text type="secondary">支持分类、标签和关键词检索</Typography.Text>
+            </div>
+            <Space>
+              <Tag color="blue">共 {data?.total ?? 0} 篇</Tag>
+              {isAuthed && (
+                <Button type="primary" icon={<PlusOutlined />} onClick={() => navigate("/editor")}>
+                  发布文章
+                </Button>
+              )}
+            </Space>
+          </div>
+
+          <Row gutter={[12, 12]} className="blogFilterRow">
+            <Col xs={24} md={7} lg={6}>
+              <Select
+                style={{ width: "100%" }}
+                options={categoryOptions}
+                value={categoryId ?? 0}
+                onChange={(value: number) =>
+                  applyFilters({ categoryId: value || undefined, tagId, q: searchInput })
+                }
+              />
+            </Col>
+            <Col xs={24} md={7} lg={6}>
+              <Select
+                style={{ width: "100%" }}
+                options={tagOptions}
+                value={tagId ?? 0}
+                onChange={(value: number) =>
+                  applyFilters({ categoryId, tagId: value || undefined, q: searchInput })
+                }
+              />
+            </Col>
+            <Col xs={24} md={10} lg={12}>
+              <Input.Search
+                value={searchInput}
+                placeholder="搜索标题或正文..."
+                allowClear
+                onChange={(event) => setSearchInput(event.target.value)}
+                onSearch={(value) => applyFilters({ categoryId, tagId, q: value })}
+              />
+            </Col>
+          </Row>
+
+          {loading && (
+            <Row gutter={[16, 16]}>
+              {Array.from({ length: 6 }).map((_, index) => (
+                <Col key={index} xs={24} sm={12} lg={8}>
+                  <Card>
+                    <Skeleton active paragraph={{ rows: 4 }} />
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          )}
+
+          {!loading && error && (
+            <Card>
+              <Space direction="vertical" size={12}>
+                <Typography.Text type="danger">
+                  {error instanceof Error ? error.message : "加载失败"}
+                </Typography.Text>
+                <Button onClick={() => void refetch()}>重试加载</Button>
+              </Space>
+            </Card>
+          )}
+
+          {!loading && !error && posts.length > 0 && (
+            <Row gutter={[16, 16]} className="blogPostGrid">
+              {posts.map((post) => (
+                <Col key={post.id} xs={24} sm={12} lg={8}>
+                  <Link to={`/posts/${post.id}`} className="blogPostLink">
+                    <Card
+                      className="blogPostCard"
+                      hoverable
+                      cover={
+                        extractCoverFromContent(post.content) ? (
+                          <img
+                            src={extractCoverFromContent(post.content) as string}
+                            alt=""
+                            style={{ height: 196, objectFit: "cover" }}
+                            loading="lazy"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              height: 196,
+                              background:
+                                "linear-gradient(130deg, rgba(22,119,255,.22) 0%, rgba(30,64,175,.16) 100%)",
+                            }}
+                          />
+                        )
+                      }
+                    >
+                      <Space direction="vertical" size={10} style={{ width: "100%" }}>
+                        <Typography.Title level={5} style={{ margin: 0 }}>
+                          {post.title}
+                        </Typography.Title>
+                        <Typography.Paragraph
+                          type="secondary"
+                          ellipsis={{ rows: 3 }}
+                          style={{ marginBottom: 0 }}
+                        >
+                          {(post.summary ?? excerptFromContent(post.content)) || ""}
+                        </Typography.Paragraph>
+                        <Space split={<span>|</span>} wrap>
+                          <Typography.Text type="secondary">
+                            {new Date(post.createdAt).toLocaleDateString()}
+                          </Typography.Text>
+                          <Typography.Text type="secondary">{post.viewCount} 阅读</Typography.Text>
+                          <Typography.Text type="secondary">{post.likesCount} 点赞</Typography.Text>
+                        </Space>
+                      </Space>
+                    </Card>
+                  </Link>
+                </Col>
+              ))}
+            </Row>
+          )}
+
+          {!loading && !error && posts.length === 0 && (
+            <Empty description="还没有文章，登录后发布第一篇吧" />
+          )}
+        </Space>
+      </Card>
     </section>
   );
 }

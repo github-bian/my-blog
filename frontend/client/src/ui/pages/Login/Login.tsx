@@ -1,135 +1,104 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { Button, Card, Form, Input, Segmented, Space, Typography, message } from "antd";
+
 import { useAuth } from "../../auth/auth";
+import { apiJson } from "../../lib/api";
 
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [isLoginMode, setIsLoginMode] = useState(true);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
+  const [mode, setMode] = useState<"login" | "register">("login");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  async function handleSubmit(values: { email: string; password: string; displayName?: string }) {
     setLoading(true);
-
     try {
-      if (isLoginMode) {
-        await login({ email, password });
+      if (mode === "login") {
+        await login({ email: values.email, password: values.password });
       } else {
-        const res = await fetch("/api/v1/auth/register", {
+        await apiJson<{ user: { id: number } }>("/api/v1/auth/register", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password, displayName }),
+          body: JSON.stringify({
+            email: values.email,
+            password: values.password,
+            displayName: values.displayName,
+          }),
         });
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(data.message || "注册失败");
-        }
-        await login({ email, password });
+        await login({ email: values.email, password: values.password });
       }
+      message.success(mode === "login" ? "登录成功" : "注册成功");
       navigate("/");
-    } catch (err: any) {
-      setError(err.message || "操作失败，请检查网络或后端是否启动");
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : "操作失败，请稍后重试");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
-    <div style={{ 
-      minHeight: "100vh", 
-      display: "flex", 
-      alignItems: "center", 
-      justifyContent: "center",
-      padding: "20px" 
-    }}>
-      <div className="glassCard" style={{ width: "100%", maxWidth: "400px" }}>
-        <h2 className="modalTitle" style={{ marginBottom: "24px" }}>
-          {isLoginMode ? "欢迎回来" : "创建账号"}
-        </h2>
-        
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <label className="field">
-            <span className="label">邮箱</span>
-            <input
-              type="email"
-              className="input"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={loading}
-              placeholder="hello@example.com"
-            />
-          </label>
+    <div className="blogAuthWrap">
+      <Card className="blogPageCard blogAuthCard" style={{ width: "min(500px, 100%)" }}>
+        <Space direction="vertical" size={18} style={{ width: "100%" }}>
+          <Space direction="vertical" size={4}>
+            <Typography.Text className="blogHeroKicker">Authentication</Typography.Text>
+            <Typography.Title level={3} style={{ margin: 0 }}>
+              {mode === "login" ? "登录博客" : "注册账号"}
+            </Typography.Title>
+            <Typography.Text type="secondary">欢迎回来，继续你的写作与分享。</Typography.Text>
+          </Space>
 
-          {!isLoginMode && (
-            <label className="field">
-              <span className="label">昵称</span>
-              <input
-                type="text"
-                className="input"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                required
-                disabled={loading}
-                placeholder="你的名字"
-              />
-            </label>
-          )}
+          <Segmented
+            block
+            value={mode}
+            onChange={(value) => setMode(value as "login" | "register")}
+            options={[
+              { label: "登录", value: "login" },
+              { label: "注册", value: "register" },
+            ]}
+          />
 
-          <label className="field">
-            <span className="label">密码</span>
-            <input
-              type="password"
-              className="input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={loading}
-              placeholder="••••••••"
-              minLength={6}
-            />
-          </label>
-
-          {error && <div className="errorMessage">{error}</div>}
-
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "8px" }}>
-            <button
-              type="submit"
-              className="magneticButton"
-              disabled={loading}
-              style={{ width: "100%", justifyContent: "center" }}
+          <Form
+            layout="vertical"
+            onFinish={(values) => void handleSubmit(values)}
+            requiredMark={false}
+            className="blogAuthForm"
+          >
+            <Form.Item
+              label="邮箱"
+              name="email"
+              rules={[{ required: true, message: "请输入邮箱" }, { type: "email", message: "邮箱格式不正确" }]}
             >
-              <span className="magneticButton__inner">
-                {loading ? "处理中..." : isLoginMode ? "登录" : "注册"}
-              </span>
-            </button>
-            
-            <button
-              type="button"
-              className="linkButton"
-              onClick={() => {
-                setIsLoginMode(!isLoginMode);
-                setError("");
-              }}
-              style={{ 
-                background: "transparent", 
-                border: "none", 
-                color: "var(--accentB)", 
-                cursor: "pointer",
-                padding: "8px"
-              }}
+              <Input placeholder="hello@example.com" size="large" />
+            </Form.Item>
+
+            {mode === "register" && (
+              <Form.Item
+                label="昵称"
+                name="displayName"
+                rules={[{ required: true, message: "请输入昵称" }]}
+              >
+                <Input placeholder="你的名字" size="large" />
+              </Form.Item>
+            )}
+
+            <Form.Item
+              label="密码"
+              name="password"
+              rules={[
+                { required: true, message: "请输入密码" },
+                { min: 6, message: "密码长度至少 6 位" },
+              ]}
             >
-              {isLoginMode ? "没有账号？去注册" : "已有账号？去登录"}
-            </button>
-          </div>
-        </form>
-      </div>
+              <Input.Password placeholder="请输入密码" size="large" />
+            </Form.Item>
+
+            <Button type="primary" htmlType="submit" loading={loading} block size="large">
+              {mode === "login" ? "登录" : "注册"}
+            </Button>
+          </Form>
+        </Space>
+      </Card>
     </div>
   );
 }

@@ -1,30 +1,8 @@
-/**
- * CollabEditor – TipTap 编辑器
- *
- * 富文本编辑，支持 Markdown 语法。
- */
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { useCallback, useEffect, useRef } from "react";
-import { EditorContent, useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Placeholder from "@tiptap/extension-placeholder";
-import Image from "@tiptap/extension-image";
-import Link from "@tiptap/extension-link";
-import TaskList from "@tiptap/extension-task-list";
-import TaskItem from "@tiptap/extension-task-item";
-import Highlight from "@tiptap/extension-highlight";
-import Underline from "@tiptap/extension-underline";
-import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
-import { Markdown } from "tiptap-markdown";
-import { common, createLowlight } from "lowlight";
-
+import { MarkdownArticle } from "./MarkdownArticle";
 import "./CollabEditor.css";
 
-const lowlight = createLowlight(common);
-
-/* ------------------------------------------------------------------ */
-/*  类型                                                                */
-/* ------------------------------------------------------------------ */
 export type CollabUser = {
   id: number;
   name: string;
@@ -38,125 +16,272 @@ type Props = {
   onChange?: (markdown: string) => void;
   wsUrl?: string;
 };
-
-/* ------------------------------------------------------------------ */
-/*  工具栏                                                              */
-/* ------------------------------------------------------------------ */
-function EditorToolbar({ editor }: { editor: ReturnType<typeof useEditor> }) {
-  if (!editor) return null;
-
-  const items = [
-    { label: "H1", action: () => editor.chain().focus().toggleHeading({ level: 1 }).run(), active: editor.isActive("heading", { level: 1 }) },
-    { label: "H2", action: () => editor.chain().focus().toggleHeading({ level: 2 }).run(), active: editor.isActive("heading", { level: 2 }) },
-    { label: "H3", action: () => editor.chain().focus().toggleHeading({ level: 3 }).run(), active: editor.isActive("heading", { level: 3 }) },
-    { type: "divider" as const },
-    { label: "B", action: () => editor.chain().focus().toggleBold().run(), active: editor.isActive("bold"), style: { fontWeight: 700 } },
-    { label: "I", action: () => editor.chain().focus().toggleItalic().run(), active: editor.isActive("italic"), style: { fontStyle: "italic" as const } },
-    { label: "U", action: () => editor.chain().focus().toggleUnderline().run(), active: editor.isActive("underline"), style: { textDecoration: "underline" } },
-    { label: "S", action: () => editor.chain().focus().toggleStrike().run(), active: editor.isActive("strike"), style: { textDecoration: "line-through" } },
-    { label: "Hi", action: () => editor.chain().focus().toggleHighlight().run(), active: editor.isActive("highlight") },
-    { type: "divider" as const },
-    { label: "• List", action: () => editor.chain().focus().toggleBulletList().run(), active: editor.isActive("bulletList") },
-    { label: "1. List", action: () => editor.chain().focus().toggleOrderedList().run(), active: editor.isActive("orderedList") },
-    { label: "☑ Task", action: () => editor.chain().focus().toggleTaskList().run(), active: editor.isActive("taskList") },
-    { type: "divider" as const },
-    { label: "引用", action: () => editor.chain().focus().toggleBlockquote().run(), active: editor.isActive("blockquote") },
-    { label: "代码", action: () => editor.chain().focus().toggleCodeBlock().run(), active: editor.isActive("codeBlock") },
-    { label: "—", action: () => editor.chain().focus().setHorizontalRule().run(), active: false },
-    { type: "divider" as const },
-    { label: "🔗", action: () => { const url = window.prompt("输入链接 URL"); if (url) editor.chain().focus().setLink({ href: url }).run(); }, active: editor.isActive("link") },
-    { label: "🖼", action: () => { const url = window.prompt("输入图片 URL"); if (url) editor.chain().focus().setImage({ src: url }).run(); }, active: false },
-  ];
-
-  return (
-    <div className="collabToolbar">
-      {items.map((item, idx) =>
-        "type" in item && item.type === "divider" ? (
-          <span key={idx} className="collabToolbar__divider" />
-        ) : (
-          <button
-            key={idx}
-            type="button"
-            className={`collabToolbar__btn ${("active" in item && item.active) ? "is-active" : ""}`}
-            onClick={"action" in item ? item.action : undefined}
-            style={"style" in item ? item.style : undefined}
-          >
-            {"label" in item ? item.label : ""}
-          </button>
-        ),
-      )}
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  主编辑器组件                                                        */
-/* ------------------------------------------------------------------ */
 export default function CollabEditor({
+  roomName,
+  user,
+  wsUrl,
   initialContent,
   onChange,
 }: Props) {
-  const initialContentSet = useRef(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const socketRef = useRef<WebSocket | null>(null);
+  const reconnectTimerRef = useRef<number | null>(null);
+  const [markdown, setMarkdown] = useState(initialContent ?? "");
+  const [previewMode, setPreviewMode] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+  const [connectionStatus, setConnectionStatus] = useState<
+    "connecting" | "connected" | "reconnecting" | "offline" | "unavailable"
+  >("connecting");
 
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        codeBlock: false,
-      }),
-      CodeBlockLowlight.configure({ lowlight }),
-      Placeholder.configure({
-        placeholder: "开始输入文章内容…",
-      }),
-      Image,
-      Link.configure({ openOnClick: false }),
-      TaskList,
-      TaskItem.configure({ nested: true }),
-      Highlight,
-      Underline,
-      Markdown.configure({
-        html: true,
-        transformPastedText: true,
-        transformCopiedText: true,
-      }),
-    ],
-    editorProps: {
-      attributes: {
-        class: "collabEditorContent",
-      },
-    },
-    onUpdate: ({ editor: e }) => {
-      if (onChange) {
-        const mdStore = (e.storage as Record<string, any>)["markdown"];
-        const md: string = mdStore?.getMarkdown?.() ?? e.getHTML();
-        onChange(md);
-      }
-    },
-  });
+  const wsEndpoint = useMemo(() => {
+    if (wsUrl) return wsUrl;
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    return `${protocol}//${window.location.host}/collab?room=${encodeURIComponent(roomName)}`;
+  }, [wsUrl, roomName]);
 
-  // 注入初始内容
   useEffect(() => {
-    if (!editor || !initialContent || initialContentSet.current) return;
-    editor.commands.setContent(initialContent);
-    initialContentSet.current = true;
-  }, [editor, initialContent]);
+    setMarkdown(initialContent ?? "");
+  }, [initialContent]);
 
-  /** 获取当前编辑器的 Markdown 内容 */
+  useEffect(() => {
+    onChange?.(markdown);
+  }, [markdown, onChange]);
+
   const getMarkdown = useCallback((): string => {
-    if (!editor) return "";
-    const mdStore = (editor.storage as Record<string, any>)["markdown"];
-    return mdStore?.getMarkdown?.() ?? editor.getHTML();
-  }, [editor]);
+    return markdown;
+  }, [markdown]);
 
-  // 暴露 getMarkdown 到 DOM
   useEffect(() => {
     const el = document.getElementById("collab-editor-root");
     if (el) (el as any).__getMarkdown = getMarkdown;
+    return () => {
+      if (el) delete (el as any).__getMarkdown;
+    };
   }, [getMarkdown]);
+
+  useEffect(() => {
+    const onOnline = () => setIsOnline(true);
+    const onOffline = () => setIsOnline(false);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+    return () => {
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isOnline) {
+      setConnectionStatus("offline");
+      socketRef.current?.close();
+      socketRef.current = null;
+      return;
+    }
+
+    let stopped = false;
+
+    const connect = (isRetry = false) => {
+      if (stopped) return;
+      setConnectionStatus(isRetry ? "reconnecting" : "connecting");
+
+      try {
+        const socket = new WebSocket(wsEndpoint);
+        socketRef.current = socket;
+
+        socket.onopen = () => {
+          if (stopped) return;
+          setConnectionStatus("connected");
+        };
+
+        socket.onerror = () => {
+          if (stopped) return;
+          setConnectionStatus("unavailable");
+        };
+
+        socket.onclose = () => {
+          if (stopped) return;
+          if (!navigator.onLine) {
+            setConnectionStatus("offline");
+            return;
+          }
+
+          setConnectionStatus("reconnecting");
+          reconnectTimerRef.current = window.setTimeout(() => connect(true), 2200);
+        };
+      } catch {
+        setConnectionStatus("unavailable");
+        reconnectTimerRef.current = window.setTimeout(() => connect(true), 2200);
+      }
+    };
+
+    connect(false);
+
+    return () => {
+      stopped = true;
+      if (reconnectTimerRef.current != null) {
+        window.clearTimeout(reconnectTimerRef.current);
+        reconnectTimerRef.current = null;
+      }
+      socketRef.current?.close();
+      socketRef.current = null;
+    };
+  }, [isOnline, wsEndpoint]);
+
+  const toolbarGroups = useMemo(
+    () => [
+      {
+        key: "headings",
+        items: [
+          { label: "H1", action: () => prefixCurrentLine("# ") },
+          { label: "H2", action: () => prefixCurrentLine("## ") },
+          { label: "H3", action: () => prefixCurrentLine("### ") },
+        ],
+      },
+      {
+        key: "inline",
+        items: [
+          { label: "B", action: () => wrapSelection("**", "**", "粗体") },
+          { label: "I", action: () => wrapSelection("*", "*", "斜体") },
+          { label: "代码", action: () => wrapSelection("`", "`", "code") },
+          { label: "引用", action: () => prefixCurrentLine("> ") },
+        ],
+      },
+      {
+        key: "blocks",
+        items: [
+          { label: "无序", action: () => prefixCurrentLine("- ") },
+          { label: "有序", action: () => prefixCurrentLine("1. ") },
+          { label: "链接", action: () => wrapSelection("[", "](https://)", "链接文本") },
+          { label: "图片", action: () => wrapSelection("![", "](https://)", "图片描述") },
+          { label: "代码块", action: () => wrapSelection("```\n", "\n```", "在这里输入代码") },
+          { label: "分割线", action: () => insertAtCursor("\n\n---\n\n") },
+        ],
+      },
+    ],
+    [],
+  );
+
+  function updateBySelection(nextValue: string, start: number, end: number) {
+    setMarkdown(nextValue);
+    window.requestAnimationFrame(() => {
+      const input = textareaRef.current;
+      if (!input) return;
+      input.focus();
+      input.setSelectionRange(start, end);
+    });
+  }
+
+  function wrapSelection(prefix: string, suffix: string, placeholder: string) {
+    const input = textareaRef.current;
+    if (!input) return;
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const selected = markdown.slice(start, end) || placeholder;
+    const next = `${markdown.slice(0, start)}${prefix}${selected}${suffix}${markdown.slice(end)}`;
+    const cursorStart = start + prefix.length;
+    const cursorEnd = cursorStart + selected.length;
+    updateBySelection(next, cursorStart, cursorEnd);
+  }
+
+  function prefixCurrentLine(prefix: string) {
+    const input = textareaRef.current;
+    if (!input) return;
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const lineStart = markdown.lastIndexOf("\n", start - 1) + 1;
+    const lineEnd = markdown.indexOf("\n", end);
+    const actualLineEnd = lineEnd === -1 ? markdown.length : lineEnd;
+    const selectedBlock = markdown.slice(lineStart, actualLineEnd);
+    const nextBlock = selectedBlock
+      .split("\n")
+      .map((line) => `${prefix}${line}`)
+      .join("\n");
+    const next = `${markdown.slice(0, lineStart)}${nextBlock}${markdown.slice(actualLineEnd)}`;
+    updateBySelection(next, lineStart, lineStart + nextBlock.length);
+  }
+
+  function insertAtCursor(text: string) {
+    const input = textareaRef.current;
+    if (!input) return;
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const next = `${markdown.slice(0, start)}${text}${markdown.slice(end)}`;
+    const cursor = start + text.length;
+    updateBySelection(next, cursor, cursor);
+  }
 
   return (
     <div id="collab-editor-root" className="collabEditor">
-      <EditorToolbar editor={editor} />
-      <EditorContent editor={editor} className="collabEditor__body" />
+      <div className="collabEditor__meta">
+        <div>
+          <div className="collabEditor__eyebrow">Writing Workspace</div>
+          <div className="collabEditor__room">房间：{roomName}</div>
+        </div>
+        <div className="collabEditor__presence">
+          <span className={["collabEditor__presenceDot", `is-${connectionStatus}`].join(" ")} />
+          <span>{user.name}</span>
+          <span className={["collabEditor__status", `is-${connectionStatus}`].join(" ")}>
+            {connectionStatus === "connected" && "协作已连接"}
+            {connectionStatus === "connecting" && "连接中"}
+            {connectionStatus === "reconnecting" && "重连中"}
+            {connectionStatus === "offline" && "网络离线"}
+            {connectionStatus === "unavailable" && "协作服务不可用"}
+          </span>
+        </div>
+      </div>
+
+      <div className="collabToolbar">
+        <div className="collabToolbar__left">
+          {toolbarGroups.map((group) => (
+            <div key={group.key} className="collabToolbar__group">
+              {group.items.map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  className="collabToolbar__btn"
+                  onClick={item.action}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="collabToolbar__modeSwitch" role="tablist" aria-label="编辑器模式">
+          <button
+            type="button"
+            className={["collabToolbar__toggle", !previewMode ? "is-active" : ""].filter(Boolean).join(" ")}
+            role="tab"
+            aria-selected={!previewMode}
+            onClick={() => setPreviewMode(false)}
+          >
+            编辑
+          </button>
+          <button
+            type="button"
+            className={["collabToolbar__toggle", previewMode ? "is-active" : ""].filter(Boolean).join(" ")}
+            role="tab"
+            aria-selected={previewMode}
+            onClick={() => setPreviewMode(true)}
+          >
+            预览 Markdown
+          </button>
+        </div>
+      </div>
+
+      {previewMode ? (
+        <div className="collabEditor__preview">
+          <MarkdownArticle content={markdown} className="collabEditor__previewMarkdown" />
+        </div>
+      ) : (
+        <textarea
+          ref={textareaRef}
+          className="collabEditor__textarea"
+          value={markdown}
+          onChange={(event) => setMarkdown(event.target.value)}
+          placeholder="使用 Markdown 输入文章内容，例如：# 标题、- 列表、```代码```"
+        />
+      )}
     </div>
   );
 }

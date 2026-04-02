@@ -192,17 +192,25 @@ a {
   margin-bottom: 18px;
 }
 
+.contentHeaderCompact {
+  margin-bottom: 14px;
+}
+
+.contentHeaderLead {
+  margin-bottom: 0;
+}
+
 .taxBar {
   display: grid;
-  gap: 12px;
-  margin-bottom: 18px;
+  gap: 14px;
+  margin-bottom: 22px;
 }
 
 .taxRow {
   display: grid;
-  grid-template-columns: 52px 1fr;
+  grid-template-columns: 64px 1fr;
   align-items: start;
-  gap: 12px;
+  gap: 14px;
 }
 
 .taxRow--search {
@@ -262,12 +270,33 @@ html[data-theme="light"] .chip--active {
 
 .taxSearch {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
 }
 
 .taxSearch .input {
   flex: 1;
+}
+
+.taxSearchPanel {
+  display: grid;
+  gap: 10px;
+}
+
+.taxSearchActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.contentPublishButton {
+  min-width: 108px;
+}
+
+.contentPublishButton .magneticButton__inner {
+  white-space: nowrap;
 }
 
 .grid3 {
@@ -1153,12 +1182,15 @@ html[data-theme="light"] .quillWrapper .ql-toolbar {
   }
 
   .taxSearch {
-    flex-direction: column;
     align-items: stretch;
   }
 
-  .taxSearch .textButton {
-    align-self: flex-start;
+  .taxSearchActions {
+    justify-content: space-between;
+  }
+
+  .contentPublishButton {
+    margin-left: auto;
   }
 
   .sectionHeaderRow {

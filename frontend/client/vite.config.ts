@@ -17,6 +17,30 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+
+          if (id.includes("react-markdown") || id.includes("remark-") || id.includes("rehype-") || id.includes("highlight.js")) {
+            return "markdown-vendor";
+          }
+
+          if (
+            id.includes("/antd/") ||
+            id.includes("@ant-design") ||
+            id.includes("/rc-") ||
+            id.includes("/@rc-component/")
+          ) {
+            return "antd-vendor";
+          }
+
+          if (id.includes("react-router") || id.includes("@tanstack/react-query")) {
+            return "app-vendor";
+          }
+        },
+      },
+    },
   },
 });
 

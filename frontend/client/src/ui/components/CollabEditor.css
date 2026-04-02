@@ -1,310 +1,234 @@
 /* ================================================================== */
-/*  CollabEditor – 协作编辑器样式                                        */
+/*  CollabEditor – Markdown 编辑器样式                                  */
 /* ================================================================== */
 
-/* ---- 容器 ---- */
 .collabEditor {
-  display: flex;
-  flex-direction: column;
-  border-radius: 14px;
-  background: var(--bg1);
-  border: 1px solid var(--glass);
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  border: 1px solid #e6ecf5;
   overflow: hidden;
+  min-height: 520px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06);
 }
 
-/* ---- 顶部栏：连接状态 + 协作者头像 ---- */
-.collabEditor__topBar {
+.collabEditor__meta {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  padding: 10px 16px;
-  border-bottom: 1px solid var(--glass);
-  background: color-mix(in srgb, var(--bg0) 40%, transparent);
-  backdrop-filter: blur(12px);
-  flex-wrap: wrap;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid #eef2f7;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.86), rgba(255, 255, 255, 0.96));
+}
+
+.collabEditor__eyebrow {
+  color: #2563eb;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 650;
+}
+
+.collabEditor__room {
+  margin-top: 4px;
+  color: #667085;
+  font-size: 13px;
+}
+
+.collabEditor__presence {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 13px;
+  border: 1px solid #e2e8f0;
+}
+
+.collabEditor__presenceDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #22c55e;
+}
+
+.collabEditor__presenceDot.is-connecting,
+.collabEditor__presenceDot.is-reconnecting {
+  background: #f59e0b;
+}
+
+.collabEditor__presenceDot.is-offline,
+.collabEditor__presenceDot.is-unavailable {
+  background: #ef4444;
 }
 
 .collabEditor__status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
   font-size: 12px;
-  color: var(--muted);
-}
-
-.collabEditor__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--muted);
-  transition: background 0.3s;
-}
-.collabEditor__dot.is-connected {
-  background: #34d399;
-  box-shadow: 0 0 6px #34d39999;
-}
-
-/* ---- 协作者头像组 ---- */
-.collabAvatars {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.collabAvatar {
-  position: relative;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 2px solid var(--accentA);
-  overflow: hidden;
-  background: var(--bg0);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: -6px;
-  transition: transform 0.18s;
-  cursor: default;
-}
-.collabAvatar:first-child {
-  margin-left: 0;
-}
-.collabAvatar:hover {
-  transform: translateY(-2px) scale(1.08);
-  z-index: 2;
-}
-
-.collabAvatar__img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.collabAvatar__initial {
-  font-size: 13px;
   font-weight: 600;
-  color: var(--text);
+  padding: 4px 8px;
+  border-radius: 999px;
+  margin-left: 2px;
+  background: #eff6ff;
+  color: #1d4ed8;
 }
 
-.collabAvatars__count {
-  font-size: 12px;
-  color: var(--muted);
-  margin-left: 8px;
-  white-space: nowrap;
+.collabEditor__status.is-connecting,
+.collabEditor__status.is-reconnecting {
+  background: #fff7ed;
+  color: #b45309;
 }
 
-/* ---- 工具栏 ---- */
+.collabEditor__status.is-offline,
+.collabEditor__status.is-unavailable {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
 .collabToolbar {
   display: flex;
-  align-items: center;
-  gap: 3px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--glass);
-  overflow-x: auto;
-  scrollbar-width: none;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eef2f7;
+  background: #f8fafc;
 }
-.collabToolbar::-webkit-scrollbar {
-  display: none;
+
+.collabToolbar__left {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.collabToolbar__group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-right: 8px;
+  margin-right: 2px;
+  border-right: 1px solid #e2e8f0;
+}
+
+.collabToolbar__group:last-child {
+  border-right: 0;
+  padding-right: 0;
+}
+
+.collabToolbar__modeSwitch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .collabToolbar__btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 32px;
-  height: 32px;
-  padding: 0 8px;
-  border: none;
+  min-width: 42px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid #d7deea;
   border-radius: 8px;
-  background: transparent;
-  color: var(--text);
-  font-size: 13px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, border-color 0.15s;
   white-space: nowrap;
 }
 .collabToolbar__btn:hover {
-  background: var(--glass);
-}
-.collabToolbar__btn.is-active {
-  background: var(--accentA);
-  color: #fff;
+  background: #eff6ff;
+  border-color: rgba(37, 99, 235, 0.28);
 }
 
-.collabToolbar__divider {
-  width: 1px;
-  height: 20px;
-  background: var(--glass);
-  margin: 0 4px;
-  flex-shrink: 0;
-}
-
-/* ---- 编辑器主体 ---- */
-.collabEditor__body {
-  flex: 1;
-  min-height: 400px;
-  overflow-y: auto;
-}
-
-.collabEditorContent {
-  padding: 24px 28px;
-  min-height: 400px;
-  outline: none;
-  font-size: 16px;
-  line-height: 1.8;
-  color: var(--text);
-}
-
-/* -- Placeholder -- */
-.collabEditorContent p.is-editor-empty:first-child::before {
-  content: attr(data-placeholder);
-  float: left;
-  color: var(--muted);
-  pointer-events: none;
-  height: 0;
-  opacity: 0.6;
-}
-
-/* -- 排版 -- */
-.collabEditorContent h1 {
-  font-size: 2em;
-  margin: 1.2em 0 0.4em;
-  line-height: 1.3;
-}
-.collabEditorContent h2 {
-  font-size: 1.5em;
-  margin: 1em 0 0.3em;
-}
-.collabEditorContent h3 {
-  font-size: 1.25em;
-  margin: 0.8em 0 0.3em;
-}
-
-.collabEditorContent p {
-  margin: 0.6em 0;
-}
-
-.collabEditorContent blockquote {
-  border-left: 3px solid var(--accentA);
-  padding-left: 16px;
-  margin: 0.8em 0;
-  color: var(--muted);
-}
-
-.collabEditorContent ul,
-.collabEditorContent ol {
-  padding-left: 24px;
-  margin: 0.6em 0;
-}
-
-.collabEditorContent ul[data-type="taskList"] {
-  list-style: none;
-  padding-left: 0;
-}
-.collabEditorContent ul[data-type="taskList"] li {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-.collabEditorContent ul[data-type="taskList"] li label {
-  margin-top: 3px;
-}
-
-.collabEditorContent pre {
-  background: var(--bg0);
-  border-radius: 8px;
-  padding: 16px;
-  overflow-x: auto;
-  margin: 0.8em 0;
-  font-size: 14px;
-}
-.collabEditorContent pre code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-}
-
-.collabEditorContent code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  background: color-mix(in srgb, var(--glass) 60%, transparent);
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-size: 0.9em;
-}
-
-.collabEditorContent hr {
-  border: none;
-  border-top: 1px solid var(--glass);
-  margin: 1.5em 0;
-}
-
-.collabEditorContent img {
-  max-width: 100%;
-  border-radius: 8px;
-  margin: 0.8em 0;
-}
-
-.collabEditorContent a {
-  color: var(--accentB);
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.collabEditorContent mark {
-  background: color-mix(in srgb, var(--accentA) 30%, transparent);
-  border-radius: 2px;
-  padding: 1px 2px;
-}
-
-/* ================================================================== */
-/*  远程协作光标样式                                                      */
-/* ================================================================== */
-.collaboration-cursor__caret {
-  position: relative;
-  border-left: 2px solid currentColor;
-  border-right: none;
-  margin-left: -1px;
-  margin-right: -1px;
-  pointer-events: none;
-  word-break: normal;
-}
-
-.collaboration-cursor__label {
-  position: absolute;
-  bottom: 100%;
-  left: -1px;
-  font-size: 11px;
+.collabToolbar__toggle {
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid #d7deea;
+  background: #ffffff;
+  color: #334155;
+  font-size: 13px;
   font-weight: 600;
-  line-height: 1;
-  padding: 2px 6px 3px;
-  border-radius: 6px 6px 6px 0;
-  color: #fff;
-  background: currentColor;
+  padding: 0 14px;
+  cursor: pointer;
   white-space: nowrap;
-  user-select: none;
-  pointer-events: none;
-  opacity: 0.9;
-  transform: translateY(-2px);
 }
 
-/* ================================================================== */
-/*  响应式                                                              */
-/* ================================================================== */
+.collabToolbar__toggle.is-active {
+  border-color: rgba(37, 99, 235, 0.34);
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.collabEditor__textarea {
+  width: 100%;
+  min-height: 420px;
+  border: none;
+  resize: vertical;
+  padding: 24px 26px;
+  background: #fff;
+  color: #0f172a;
+  font-size: 16px;
+  line-height: 1.85;
+  outline: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.collabEditor__textarea::placeholder {
+  color: #94a3b8;
+}
+
+.collabEditor__preview {
+  min-height: 420px;
+  padding: 24px 26px;
+  overflow: auto;
+  background: #ffffff;
+}
+
+.collabEditor__previewMarkdown {
+  max-width: 860px;
+}
+
 @media (max-width: 768px) {
-  .collabEditor__topBar {
-    padding: 8px 12px;
+  .collabEditor {
+    min-height: 460px;
   }
-  .collabEditorContent {
-    padding: 16px;
-    font-size: 15px;
+
+  .collabEditor__meta {
+    flex-direction: column;
+    align-items: flex-start;
   }
+
+  .collabEditor__presence {
+    width: 100%;
+    justify-content: space-between;
+  }
+
   .collabToolbar {
-    padding: 6px 8px;
+    flex-direction: column;
+    align-items: stretch;
   }
-  .collabToolbar__btn {
-    min-width: 28px;
-    height: 28px;
-    font-size: 12px;
-    padding: 0 5px;
+  .collabToolbar__left {
+    gap: 5px;
+  }
+  .collabToolbar__toggle {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .collabToolbar__modeSwitch {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .collabEditor__textarea,
+  .collabEditor__preview {
+    padding: 16px;
   }
 }

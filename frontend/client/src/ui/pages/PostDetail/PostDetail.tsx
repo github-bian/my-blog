@@ -1,9 +1,26 @@
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import {
+  Avatar,
+  Button,
+  Card,
+  Col,
+  Empty,
+  List,
+  Row,
+  Skeleton,
+  Space,
+  Tag,
+  Typography,
+  Input,
+  message,
+} from "antd";
+import { EditOutlined, LikeOutlined } from "@ant-design/icons";
+
 import { usePostQuery } from "../../hooks/queries/usePosts";
-import { MagneticButton } from "../../components/MagneticButton";
+import { usePostsQuery } from "../../hooks/queries/usePosts";
 import { useAuth } from "../../auth/auth";
-import { useState, useCallback, useEffect } from "react";
-import { apiJson, ApiError } from "../../lib/api";
+import { ApiError, apiJson } from "../../lib/api";
 import { MarkdownArticle } from "../../components/MarkdownArticle";
 
 interface Comment {
@@ -43,263 +60,328 @@ type EditablePost = {
 export default function PostDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: postData, isLoading, error } = usePostQuery(id ?? "");
+  const { data: post, isLoading, error } = usePostQuery(id ?? "");
+  const { data: postListData } = usePostsQuery({ limit: 60, offset: 0 });
   const { state, isAuthed } = useAuth();
 
-  const post = postData;
-
-  // 点赞状态
   const [likesCount, setLikesCount] = useState(0);
   const [likeLoading, setLikeLoading] = useState(false);
-  const [likeError, setLikeError] = useState<string | null>(null);
 
-  // 评论状态
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
-  const [commentsError, setCommentsError] = useState<string | null>(null);
   const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // 加载评论
+  const outline = useMemo(() => {
+    if (!post?.content) return [] as Array<{ level: number; text: string; id: string }>;
+    return post.content
+      .split("\n")
+      .map((line) => line.match(/^(#{1,4})\s+(.+)$/))
+      .filter(Boolean)
+      .map((match) => {
+        const level = match?.[1].length ?? 0;
+        const text = match?.[2].trim() ?? "";
+        const id = text
+          .toLowerCase()
+          .replace(/[^\w\u4e00-\u9fa5\s-]/g, "")
+          .replace(/\s+/g, "-");
+        return { level, text, id };
+      })
+      .filter((item) => item.text);
+  }, [post?.content]);
+
+  const siblingNav = useMemo(() => {
+    const items = postListData?.items ?? [];
+    if (!post || items.length === 0) return { previous: null as any, next: null as any };
+    const currentIndex = items.findIndex((item) => item.id === post.id);
+    if (currentIndex === -1) return { previous: null as any, next: null as any };
+    return {
+      previous: items[currentIndex + 1] ?? null,
+      next: items[currentIndex - 1] ?? null,
+    };
+  }, [post, postListData?.items]);
+
+  async function shareCurrentPost() {
+    const shareUrl = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: post?.title ?? "文章", url: shareUrl });
+        return;
+      }
+      await navigator.clipboard.writeText(shareUrl);
+      message.success("已复制文章链接");
+    } catch {
+      message.warning("分享取消或复制失败");
+    }
+  }
+
   const loadComments = useCallback(async () => {
     if (!id) return;
     try {
       setCommentsLoading(true);
-      setCommentsError(null);
       const data = await apiJson<CommentListResponse>(`/api/v1/comments/post/${id}`);
       setComments(data.items);
     } catch (e: unknown) {
-      if (e instanceof ApiError) {
-        setCommentsError(e.message);
-      } else {
-        setCommentsError("加载评论失败");
-      }
+      const text = e instanceof ApiError ? e.message : "加载评论失败";
+      message.error(text);
     } finally {
       setCommentsLoading(false);
     }
-  }, [id]);
+  }, [id, message]);
 
-  // 组件加载时获取评论
-  useEffect(() => { loadComments(); }, [loadComments]);
+  useEffect(() => {
+    void loadComments();
+  }, [loadComments]);
 
-  // 点赞文章
   const handleLike = useCallback(async () => {
     if (!id) return;
     try {
       setLikeLoading(true);
-      setLikeError(null);
       const response = await apiJson<{ post: { likesCount: number } }>(`/api/v1/posts/${id}/like`, {
         method: "POST",
       });
       setLikesCount(response.post.likesCount);
+      message.success("点赞成功");
     } catch (e: unknown) {
-      if (e instanceof ApiError) {
-        setLikeError(e.message);
-      } else {
-        setLikeError("点赞失败");
-      }
+      message.error(e instanceof ApiError ? e.message : "点赞失败");
     } finally {
       setLikeLoading(false);
     }
-  }, [id]);
+  }, [id, message]);
 
-  // 提交评论
   const handleSubmitComment = useCallback(async () => {
     if (!id || !state?.accessToken || !newComment.trim()) return;
     try {
       setSubmitting(true);
-      setSubmitError(null);
       await apiJson(`/api/v1/comments/post/${id}`, {
         method: "POST",
         body: JSON.stringify({ content: newComment.trim() }),
         token: state.accessToken,
       });
       setNewComment("");
-      await loadComments(); // 重新加载评论
+      message.success("评论已发布");
+      await loadComments();
     } catch (e: unknown) {
-      if (e instanceof ApiError) {
-        setSubmitError(e.message);
-      } else {
-        setSubmitError("发表评论失败");
-      }
+      message.error(e instanceof ApiError ? e.message : "发表评论失败");
     } finally {
       setSubmitting(false);
     }
-  }, [id, state?.accessToken, newComment, loadComments]);
+  }, [id, state?.accessToken, newComment, loadComments, message]);
 
   if (isLoading) {
     return (
-      <div className="section" style={{ minHeight: "100vh", paddingTop: "120px" }}>
-        <div className="glassCard skeletonCard" style={{ height: "400px" }} />
-      </div>
+      <Card className="blogPageCard">
+        <Skeleton active paragraph={{ rows: 9 }} />
+      </Card>
     );
   }
 
   if (error || !post) {
     return (
-      <div className="section" style={{ minHeight: "100vh", paddingTop: "120px" }}>
-        <div className="glassCard">
-          <div className="errorNote">{error ? (error as Error).message : "文章不存在或已被删除"}</div>
-          <div style={{ marginTop: "20px" }}>
-            <MagneticButton onClick={() => navigate("/posts")} ariaLabel="返回列表">
-              返回列表
-            </MagneticButton>
-          </div>
-        </div>
-      </div>
+      <Card className="blogPageCard">
+        <Space direction="vertical" size={12}>
+          <Typography.Text type="danger">
+            {error ? (error as Error).message : "文章不存在或已被删除"}
+          </Typography.Text>
+          <Button onClick={() => navigate("/")}>返回首页</Button>
+        </Space>
+      </Card>
     );
   }
 
   return (
-    <div className="section articlePage">
-      <div className="glassCard articleCard">
-        <div className="articleTopBar">
-          <MagneticButton onClick={() => navigate("/archive")} ariaLabel="返回列表">
-            返回列表
-          </MagneticButton>
-          
-          {isAuthed && state?.user?.id === post.authorId && (
-            <MagneticButton 
-              onClick={() =>
-                navigate("/editor", {
-                  state: {
-                    post: {
-                      id: post.id,
-                      authorId: post.authorId,
-                      title: post.title,
-                      summary: post.summary,
-                      content: post.content,
-                      categoryId: post.categoryId,
-                      category: post.category,
-                      tags: post.tags,
-                    } satisfies EditablePost,
-                  },
-                })
-              }
-              ariaLabel="编辑文章"
-            >
-              编辑文章
-            </MagneticButton>
-          )}
-        </div>
-        
-        <h1 className="articleTitle">
-          {post.title}
-        </h1>
-        
-        <div className="postMeta articleMetaBar">
-          <span className="metaText">
-            作者：{post.author?.displayName || "佚名"}
-          </span>
-          <span className="metaText" style={{ marginLeft: "16px" }}>
-            发布于：{new Date(post.createdAt).toLocaleString()}
-          </span>
-          {post.category && (
-            <span className="metaText" style={{ marginLeft: "16px" }}>
-              分类：{post.category.name}
-            </span>
-          )}
-          <span className="metaText" style={{ marginLeft: "16px" }}>
-            阅读：{post.viewCount || 0}
-          </span>
-        </div>
-
-        {/* 标签 */}
-        {post.tags && post.tags.length > 0 && (
-          <div className="pillRow" style={{ marginBottom: "2rem" }}>
-            {post.tags.map((tag: any) => (
-              <Link
-                key={tag.id}
-                to={`/posts?tagId=${tag.id}`}
-                className="pill"
-                style={{ textDecoration: "none", color: "inherit" }}
+    <div className="blogArticleLayout">
+      <Row gutter={[20, 20]} align="top">
+        <Col xs={24} xl={17}>
+          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      <Card className="blogPageCard blogArticleContentCard">
+        <Space direction="vertical" size={14} style={{ width: "100%" }}>
+          <Space wrap>
+            <Button onClick={() => navigate("/")}>返回首页</Button>
+            {isAuthed && state?.user?.id === post.authorId && (
+              <Button
+                type="primary"
+                icon={<EditOutlined />}
+                onClick={() =>
+                  navigate(`/editor?id=${post.id}`, {
+                    state: {
+                      post: {
+                        id: post.id,
+                        authorId: post.authorId,
+                        title: post.title,
+                        summary: post.summary,
+                        content: post.content,
+                        categoryId: post.categoryId,
+                        category: post.category,
+                        tags: post.tags,
+                      } satisfies EditablePost,
+                    },
+                  })
+                }
               >
-                {tag.name}
-              </Link>
-            ))}
-          </div>
-        )}
+                编辑文章
+              </Button>
+            )}
+          </Space>
 
-        {/* 文章正文 */}
-        <MarkdownArticle content={post.content} className="postContent articleMarkdown" />
+          <Typography.Title level={1} className="blogArticleTitle">
+            {post.title}
+          </Typography.Title>
 
-        {/* 点赞区域 */}
-        <div className="metaRow" style={{ marginBottom: "2rem", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "20px" }}>
-          <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-            <MagneticButton
-              onClick={() => void handleLike()}
-              disabled={likeLoading}
-              ariaLabel="点赞文章"
-            >
-              {likeLoading ? "点赞中..." : `点赞 (${likesCount || post.likesCount})`}
-            </MagneticButton>
-            {likeError && <span className="errorNote">{likeError}</span>}
-          </div>
-        </div>
+          <Space wrap className="blogArticleMeta">
+            <Tag color="blue">作者 {post.author?.displayName || "佚名"}</Tag>
+            <Tag>发布于 {new Date(post.createdAt).toLocaleString()}</Tag>
+            {post.category && <Tag color="geekblue">分类 {post.category.name}</Tag>}
+            <Tag>阅读 {post.viewCount || 0}</Tag>
+          </Space>
 
-        {/* 评论区域 */}
-        <div className="articleComments">
-          <h3 className="sectionTitle">评论 ({comments.length})</h3>
-          
-          {/* 发表评论表单 */}
-          {isAuthed ? (
-            <div className="articleComposer">
-              <textarea
-                className="textarea"
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder="写下你的评论..."
-                rows={3}
-                style={{ width: "100%", marginBottom: "1rem" }}
-                disabled={submitting}
-              />
-              <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-                <MagneticButton
-                  onClick={() => void handleSubmitComment()}
-                  disabled={submitting || !newComment.trim()}
-                  ariaLabel="发表评论"
-                >
-                  {submitting ? "发表中..." : "发表评论"}
-                </MagneticButton>
-                {submitError && <span className="errorNote">{submitError}</span>}
-              </div>
-            </div>
-          ) : (
-            <div className="articleComposer">
-              <p className="hintText">请先 <Link to="/login" style={{ color: "var(--accentB)" }}>登录</Link> 后发表评论</p>
-            </div>
-          )}
-
-          {/* 评论列表 */}
-          {commentsLoading ? (
-            <div className="hintText">加载评论中...</div>
-          ) : commentsError ? (
-            <div className="errorNote">{commentsError}</div>
-          ) : comments.length === 0 ? (
-            <div className="hintText">暂无评论，来发表第一条评论吧。</div>
-          ) : (
-            <div style={{ display: "grid", gap: "1.5rem" }}>
-              {comments.map((comment) => (
-                <div key={comment.id} className="glassCard glassCard--nested" style={{ padding: "1.5rem" }}>
-                  <div className="metaRow" style={{ marginBottom: "0.5rem" }}>
-                    <span className="metaText">
-                      {comment.author?.displayName || "匿名用户"}
-                    </span>
-                    <span className="metaText">
-                      {new Date(comment.createdAt).toLocaleString()}
-                    </span>
-                  </div>
-                  <p style={{ margin: 0, lineHeight: 1.6 }}>{comment.content}</p>
-                  <div style={{ marginTop: "0.5rem" }}>
-                    <span className="metaText">点赞: {comment.likesCount}</span>
-                  </div>
-                </div>
+          {post.tags && post.tags.length > 0 && (
+            <Space wrap>
+              {post.tags.map((tag) => (
+                <Link key={tag.id} to={`/posts?tagId=${tag.id}`}>
+                  <Tag>{tag.name}</Tag>
+                </Link>
               ))}
-            </div>
+            </Space>
           )}
-        </div>
-      </div>
+
+          <MarkdownArticle content={post.content} className="articleMarkdown" />
+
+          <div className="blogArticleActionRow">
+            <Space wrap>
+              <Button icon={<LikeOutlined />} loading={likeLoading} onClick={() => void handleLike()}>
+                点赞 {likesCount || post.likesCount}
+              </Button>
+              <Button onClick={() => void shareCurrentPost()}>分享文章</Button>
+            </Space>
+          </div>
+        </Space>
+      </Card>
+
+      <Card className="blogPageCard blogCommentCard" title={`评论 (${comments.length})`}>
+        <Space direction="vertical" size={12} style={{ width: "100%" }}>
+          {isAuthed ? (
+            <Space direction="vertical" size={8} style={{ width: "100%" }}>
+              <Input.TextArea
+                value={newComment}
+                rows={3}
+                placeholder="写下你的评论..."
+                onChange={(event) => setNewComment(event.target.value)}
+              />
+              <Button
+                type="primary"
+                loading={submitting}
+                disabled={!newComment.trim()}
+                onClick={() => void handleSubmitComment()}
+              >
+                发表评论
+              </Button>
+            </Space>
+          ) : (
+            <Typography.Text type="secondary">
+              请先 <Link to="/login">登录</Link> 后发表评论
+            </Typography.Text>
+          )}
+
+          {commentsLoading ? (
+            <Skeleton active paragraph={{ rows: 4 }} />
+          ) : comments.length === 0 ? (
+            <Empty description="暂无评论，来发表第一条吧" />
+          ) : (
+            <List
+              className="blogCommentList"
+              dataSource={comments}
+              renderItem={(comment) => (
+                <List.Item>
+                  <List.Item.Meta
+                    avatar={<Avatar>{comment.author?.displayName?.slice(0, 1) ?? "匿"}</Avatar>}
+                    title={
+                      <Space size={8}>
+                        <Typography.Text strong>
+                          {comment.author?.displayName || "匿名用户"}
+                        </Typography.Text>
+                        <Typography.Text type="secondary">
+                          {new Date(comment.createdAt).toLocaleString()}
+                        </Typography.Text>
+                      </Space>
+                    }
+                    description={
+                      <Space direction="vertical" size={6}>
+                        <Typography.Paragraph style={{ marginBottom: 0 }}>
+                          {comment.content}
+                        </Typography.Paragraph>
+                        <Typography.Text type="secondary">点赞 {comment.likesCount}</Typography.Text>
+                      </Space>
+                    }
+                  />
+                </List.Item>
+              )}
+            />
+          )}
+        </Space>
+      </Card>
+          </Space>
+        </Col>
+
+        <Col xs={24} xl={7}>
+          <Space direction="vertical" size={16} style={{ width: "100%" }} className="blogArticleAside">
+            <Card className="blogPageCard blogArticleAsideCard" title="文章信息">
+              <Space direction="vertical" size={10} style={{ width: "100%" }}>
+                <Typography.Text type="secondary">作者</Typography.Text>
+                <Typography.Text strong>{post.author?.displayName || "佚名"}</Typography.Text>
+                <Typography.Text type="secondary">发布时间</Typography.Text>
+                <Typography.Text>{new Date(post.createdAt).toLocaleString()}</Typography.Text>
+                <Typography.Text type="secondary">分类</Typography.Text>
+                <Typography.Text>{post.category?.name || "未分类"}</Typography.Text>
+                <Typography.Text type="secondary">统计</Typography.Text>
+                <Space wrap>
+                  <Tag>阅读 {post.viewCount || 0}</Tag>
+                  <Tag color="blue">点赞 {likesCount || post.likesCount}</Tag>
+                </Space>
+              </Space>
+            </Card>
+
+            {outline.length > 0 && (
+              <Card className="blogPageCard blogArticleAsideCard" title="目录">
+                <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                  {outline.map((item) => (
+                    <a
+                      key={`${item.id}-${item.level}`}
+                      href={`#${item.id}`}
+                      className="blogTocLink"
+                      style={{ paddingLeft: `${(item.level - 1) * 12}px` }}
+                    >
+                      {item.text}
+                    </a>
+                  ))}
+                </Space>
+              </Card>
+            )}
+
+            <Card className="blogPageCard blogArticleAsideCard" title="阅读下一步">
+              <Space direction="vertical" size={10} style={{ width: "100%" }}>
+                {siblingNav.previous ? (
+                  <Link to={`/posts/${siblingNav.previous.id}`} className="blogSiblingLink">
+                    <Typography.Text type="secondary">上一篇</Typography.Text>
+                    <Typography.Text strong>{siblingNav.previous.title}</Typography.Text>
+                  </Link>
+                ) : (
+                  <Typography.Text type="secondary">上一篇：暂无</Typography.Text>
+                )}
+
+                {siblingNav.next ? (
+                  <Link to={`/posts/${siblingNav.next.id}`} className="blogSiblingLink">
+                    <Typography.Text type="secondary">下一篇</Typography.Text>
+                    <Typography.Text strong>{siblingNav.next.title}</Typography.Text>
+                  </Link>
+                ) : (
+                  <Typography.Text type="secondary">下一篇：暂无</Typography.Text>
+                )}
+              </Space>
+            </Card>
+          </Space>
+        </Col>
+      </Row>
     </div>
   );
 }

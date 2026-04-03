@@ -32,3 +32,8 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Runtime data (do not commit generated service state)
+vanblog-runtime/data/mongo/
+vanblog-runtime/log/
+vanblog-runtime/caddy/data/

@@ -1,0 +1,25 @@
+@import (reference) '~antd/es/style/themes/index';
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: auto;
+  background: linear-gradient(180deg, #f8fafc 0%, #f2f5f8 100%);
+}
+
+.content {
+  flex: 1;
+  margin: 0 auto;
+  padding: 32px 0;
+}
+
+@media (min-width: @screen-md-min) {
+  .container {
+    background-image: none;
+  }
+
+  .content {
+    padding: 120px 0 24px;
+  }
+}

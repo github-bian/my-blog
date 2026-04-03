@@ -1,0 +1,26 @@
+/* 滚动槽 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+#toc-container::-webkit-scrollbar{
+  width: 6px;
+}
+.dark #toc-container::-webkit-scrollbar-thumb {
+  background: #484858;
+  border-radius: 4px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #505068;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+/* 滚动条滑块 */
+::-webkit-scrollbar-thumb {
+  background: #d0d0dc;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #b0b0c0;
+}

@@ -1,0 +1,24 @@
+.backToTop {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  right: 1.25rem;
+  bottom: 2.5rem;
+  width: 44px;
+  height: 44px;
+  background-color: #fff;
+  font-size: 40px;
+  z-index: 90;
+  cursor: pointer;
+  text-align: center;
+  border: 1px solid var(--flat-line, #eaedf2);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.backToTop:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  border-color: var(--accent, #e94560);
+  color: var(--accent, #e94560);
+}

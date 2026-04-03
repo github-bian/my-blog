@@ -121,7 +121,7 @@ export default function ContentSection() {
   return (
     <section id="content" className="homeSection">
       <Card className="blogPageCard blogHeroCard" styles={{ body: { padding: 24 } }}>
-        <Space direction="vertical" size={8}>
+        <Space orientation="vertical" size={8}>
           <Typography.Text className="blogHeroKicker">Personal Writing Space</Typography.Text>
           <Typography.Title level={2} style={{ margin: 0 }}>
             记录思考、分享经验、持续创作
@@ -138,7 +138,7 @@ export default function ContentSection() {
             {featuredPosts.length === 0 ? (
               <Empty description="暂无推荐文章" image={Empty.PRESENTED_IMAGE_SIMPLE} />
             ) : (
-              <Space direction="vertical" size={12} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={12} style={{ width: "100%" }}>
                 {featuredPosts.map((post, index) => (
                   <Link key={post.id} to={`/posts/${post.id}`} className="blogRecommendItem">
                     <div className="blogRecommendIndex">{String(index + 1).padStart(2, "0")}</div>
@@ -187,7 +187,7 @@ export default function ContentSection() {
 
             <div className="blogLatestBlock">
               <Typography.Text strong>最新发布</Typography.Text>
-              <Space direction="vertical" size={8} style={{ width: "100%", marginTop: 10 }}>
+              <Space orientation="vertical" size={8} style={{ width: "100%", marginTop: 10 }}>
                 {latestPosts.length > 0 ? (
                   latestPosts.map((post) => (
                     <Link key={post.id} to={`/posts/${post.id}`} className="blogLatestItem">
@@ -207,7 +207,7 @@ export default function ContentSection() {
       </Row>
 
       <Card className="blogPageCard blogFeedCard" styles={{ body: { padding: 24 } }}>
-        <Space direction="vertical" size={18} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={18} style={{ width: "100%" }}>
           <div className="blogFeedHeader">
             <div>
               <Typography.Title level={3} style={{ margin: 0 }}>
@@ -271,7 +271,7 @@ export default function ContentSection() {
 
           {!loading && error && (
             <Card>
-              <Space direction="vertical" size={12}>
+              <Space orientation="vertical" size={12}>
                 <Typography.Text type="danger">
                   {error instanceof Error ? error.message : "加载失败"}
                 </Typography.Text>
@@ -308,7 +308,7 @@ export default function ContentSection() {
                         )
                       }
                     >
-                      <Space direction="vertical" size={10} style={{ width: "100%" }}>
+                      <Space orientation="vertical" size={10} style={{ width: "100%" }}>
                         <Typography.Title level={5} style={{ margin: 0 }}>
                           {post.title}
                         </Typography.Title>
@@ -319,7 +319,7 @@ export default function ContentSection() {
                         >
                           {(post.summary ?? excerptFromContent(post.content)) || ""}
                         </Typography.Paragraph>
-                        <Space split={<span>|</span>} wrap>
+                        <Space separator={<span>|</span>} wrap>
                           <Typography.Text type="secondary">
                             {new Date(post.createdAt).toLocaleDateString()}
                           </Typography.Text>

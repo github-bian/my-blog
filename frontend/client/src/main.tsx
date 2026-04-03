@@ -41,18 +41,29 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       theme={{
         algorithm: theme.defaultAlgorithm,
         token: {
-          colorPrimary: "#2563eb",
-          colorInfo: "#2563eb",
+          colorPrimary: "#0ea5a4",
+          colorInfo: "#0891b2",
           colorSuccess: "#16a34a",
-          colorWarning: "#faad14",
-          colorError: "#ff4d4f",
-          borderRadius: 14,
-          borderRadiusLG: 18,
-          fontSize: 16,
-          lineHeight: 1.65,
+          colorWarning: "#ea580c",
+          colorError: "#dc2626",
+          colorBgBase: "#fffdf8",
+          colorBgLayout: "#f4efe4",
+          colorTextBase: "#0f172a",
+          borderRadius: 10,
+          borderRadiusLG: 14,
+          borderRadiusSM: 4,
+          fontSize: 15,
           fontFamily:
-            '"Avenir Next", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif',
+            '"IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+          colorBorder: "#d7cfbf",
+          colorBorderSecondary: "#e9e2d6",
+          wireframe: true,
         },
+        components: {
+          Card: {
+            boxShadowTertiary: "0 16px 32px rgba(15, 23, 42, 0.08)",
+          }
+        }
       }}
     >
       <QueryClientProvider client={queryClient}>

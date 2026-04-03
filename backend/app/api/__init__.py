@@ -20,6 +20,7 @@ def create_api_v1_blueprint() -> Blueprint:
     from .comments import comments_bp
     from .categories import categories_bp
     from .tags import tags_bp
+    from .profile import profile_bp
 
     # 先注册错误处理蓝图：这样更容易保证异常都能被统一格式化成 JSON
     api_v1.register_blueprint(errors_bp)
@@ -30,4 +31,5 @@ def create_api_v1_blueprint() -> Blueprint:
     api_v1.register_blueprint(comments_bp)
     api_v1.register_blueprint(categories_bp)
     api_v1.register_blueprint(tags_bp)
+    api_v1.register_blueprint(profile_bp)
     return api_v1

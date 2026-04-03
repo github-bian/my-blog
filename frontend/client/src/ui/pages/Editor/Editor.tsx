@@ -168,7 +168,7 @@ export default function Editor() {
   if (!collabUser) {
     return (
       <Card className="blogPageCard">
-        <Space direction="vertical" size={8}>
+        <Space orientation="vertical" size={8}>
           <Typography.Title level={4} style={{ margin: 0 }}>
             请先登录
           </Typography.Title>
@@ -183,7 +183,7 @@ export default function Editor() {
       <Row gutter={[20, 20]} align="top">
         <Col xs={24} xl={17}>
           <Card className="blogPageCard editorAntCard">
-      <Space direction="vertical" size={16} style={{ width: "100%" }}>
+      <Space orientation="vertical" size={16} style={{ width: "100%" }}>
         <div className="editorAntHeader">
           <div>
             <Typography.Text type="secondary">COLLABORATIVE EDITOR</Typography.Text>
@@ -200,6 +200,11 @@ export default function Editor() {
 
         {errorMsg && <Alert type="error" showIcon message={errorMsg} />}
         {isEditing && isLoadingExisting && <Alert type="info" showIcon message="正在加载文章原文..." />}
+        <Alert
+          type="success"
+          showIcon
+          message="增强预览已启用：使用 ```mermaid 渲染架构图，使用 ```echarts 渲染图表（JSON 配置）。"
+        />
 
         <Form layout="vertical" requiredMark={false} className="editorAntForm">
           <Row gutter={[16, 4]}>
@@ -286,9 +291,9 @@ export default function Editor() {
         </Col>
 
         <Col xs={24} xl={7}>
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
             <Card className="blogPageCard editorAsideCard" title="发布面板">
-              <Space direction="vertical" size={12} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={12} style={{ width: "100%" }}>
                 <Typography.Text type="secondary">创作状态</Typography.Text>
                 <Space wrap>
                   <Tag color="blue">字数 {wordCount}</Tag>

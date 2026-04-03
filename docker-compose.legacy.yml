@@ -1,0 +1,51 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: blog_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change-me}
+      MYSQL_DATABASE: ${MYSQL_DB:-personal_homepage}
+    ports:
+      - "${MYSQL_DOCKER_PORT:-3307}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # 将初始化脚本挂载到容器内，初次启动时会自动执行建表
+      - ./backend/db/mysql_init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --default-authentication-plugin=mysql_native_password
+
+  redis:
+    image: redis:7-alpine
+    container_name: blog_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    container_name: blog_es
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false  # 本地开发暂关安全认证，方便调试
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m" # 限制 ES 内存占用，防止开发机卡顿
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  # 预留给后端和前端的配置（目前可以在宿主机运行，后续全面容器化时取消注释即可）
+  # backend:
+  #   build: ./backend
+  #   ports:
+  #     - "5005:5005"
+  #   depends_on:
+  #     - mysql
+  #     - redis
+  #     - elasticsearch
+
+volumes:
+  mysql_data:
+  redis_data:
+  es_data:

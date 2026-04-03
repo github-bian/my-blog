@@ -42,7 +42,7 @@ export function useProfile() {
       try {
         setLoading(true);
         // 尝试从真实 API 获取数据
-        const result = await apiJson<ProfileData>("/api/profile");
+        const result = await apiJson<ProfileData>("/api/v1/profile");
         if (mounted) {
           setData(result);
         }

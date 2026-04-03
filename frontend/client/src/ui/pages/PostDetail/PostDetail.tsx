@@ -179,7 +179,7 @@ export default function PostDetail() {
   if (error || !post) {
     return (
       <Card className="blogPageCard">
-        <Space direction="vertical" size={12}>
+        <Space orientation="vertical" size={12}>
           <Typography.Text type="danger">
             {error ? (error as Error).message : "文章不存在或已被删除"}
           </Typography.Text>
@@ -193,9 +193,9 @@ export default function PostDetail() {
     <div className="blogArticleLayout">
       <Row gutter={[20, 20]} align="top">
         <Col xs={24} xl={17}>
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={16} style={{ width: "100%" }}>
       <Card className="blogPageCard blogArticleContentCard">
-        <Space direction="vertical" size={14} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={14} style={{ width: "100%" }}>
           <Space wrap>
             <Button onClick={() => navigate("/")}>返回首页</Button>
             {isAuthed && state?.user?.id === post.authorId && (
@@ -259,9 +259,9 @@ export default function PostDetail() {
       </Card>
 
       <Card className="blogPageCard blogCommentCard" title={`评论 (${comments.length})`}>
-        <Space direction="vertical" size={12} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={12} style={{ width: "100%" }}>
           {isAuthed ? (
-            <Space direction="vertical" size={8} style={{ width: "100%" }}>
+            <Space orientation="vertical" size={8} style={{ width: "100%" }}>
               <Input.TextArea
                 value={newComment}
                 rows={3}
@@ -306,7 +306,7 @@ export default function PostDetail() {
                       </Space>
                     }
                     description={
-                      <Space direction="vertical" size={6}>
+                      <Space orientation="vertical" size={6}>
                         <Typography.Paragraph style={{ marginBottom: 0 }}>
                           {comment.content}
                         </Typography.Paragraph>
@@ -324,9 +324,9 @@ export default function PostDetail() {
         </Col>
 
         <Col xs={24} xl={7}>
-          <Space direction="vertical" size={16} style={{ width: "100%" }} className="blogArticleAside">
+          <Space orientation="vertical" size={16} style={{ width: "100%" }} className="blogArticleAside">
             <Card className="blogPageCard blogArticleAsideCard" title="文章信息">
-              <Space direction="vertical" size={10} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={10} style={{ width: "100%" }}>
                 <Typography.Text type="secondary">作者</Typography.Text>
                 <Typography.Text strong>{post.author?.displayName || "佚名"}</Typography.Text>
                 <Typography.Text type="secondary">发布时间</Typography.Text>
@@ -343,7 +343,7 @@ export default function PostDetail() {
 
             {outline.length > 0 && (
               <Card className="blogPageCard blogArticleAsideCard" title="目录">
-                <Space direction="vertical" size={8} style={{ width: "100%" }}>
+                <Space orientation="vertical" size={8} style={{ width: "100%" }}>
                   {outline.map((item) => (
                     <a
                       key={`${item.id}-${item.level}`}
@@ -359,7 +359,7 @@ export default function PostDetail() {
             )}
 
             <Card className="blogPageCard blogArticleAsideCard" title="阅读下一步">
-              <Space direction="vertical" size={10} style={{ width: "100%" }}>
+              <Space orientation="vertical" size={10} style={{ width: "100%" }}>
                 {siblingNav.previous ? (
                   <Link to={`/posts/${siblingNav.previous.id}`} className="blogSiblingLink">
                     <Typography.Text type="secondary">上一篇</Typography.Text>

@@ -63,6 +63,10 @@ export function MainLayout() {
       icon: <DashboardOutlined />,
       label: <Link to="/dashboard">仪表盘</Link>,
     },
+    {
+      key: "qqhkx",
+      label: <Link to="/qqhkx">QQHKX 复刻页</Link>,
+    },
   ];
 
   const userItems: MenuProps["items"] = isAuthed
@@ -164,9 +168,9 @@ export function MainLayout() {
         onClose={() => setMenuOpen(false)}
         title="导航"
         placement="left"
-        width={280}
+        size="default"
       >
-        <Space direction="vertical" size={14} style={{ width: "100%" }}>
+        <Space orientation="vertical" size={14} style={{ width: "100%" }}>
           <Input.Search
             placeholder="搜索文章"
             allowClear

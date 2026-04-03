@@ -166,6 +166,27 @@
   color: #1d4ed8;
 }
 
+.collabEditor__syntaxTips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid #eef2f7;
+  background: #f8fbff;
+  color: #334155;
+  font-size: 12px;
+}
+
+.collabEditor__syntaxTips code {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e8eefb;
+  color: #1e40af;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
 .collabEditor__textarea {
   width: 100%;
   min-height: 420px;
@@ -227,6 +248,11 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .collabEditor__syntaxTips {
+    padding-inline: 12px;
+  }
+
   .collabEditor__textarea,
   .collabEditor__preview {
     padding: 16px;

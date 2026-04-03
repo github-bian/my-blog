@@ -26,6 +26,10 @@ export default defineConfig({
             return "markdown-vendor";
           }
 
+          if (id.includes("/mermaid/") || id.includes("/echarts/") || id.includes("/d3-")) {
+            return "viz-vendor";
+          }
+
           if (
             id.includes("/antd/") ||
             id.includes("@ant-design") ||

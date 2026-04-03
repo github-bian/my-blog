@@ -1,18 +1,20 @@
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap");
+
 :root {
   /* 全局 CSS 变量（主题色/玻璃材质/布局尺寸）：
      - 深色主题是默认值
      - 通过 <html data-theme="light"> 切换浅色变量（见 useTheme Hook） */
   color-scheme: light dark;
-  --bg0: #070a14;
-  --bg1: #0b0f22;
+  --bg0: #06131a;
+  --bg1: #0e1e28;
   --text: rgba(255, 255, 255, 0.92);
   --muted: rgba(255, 255, 255, 0.72);
   --glass: rgba(255, 255, 255, 0.08);
   --glassBorder: rgba(255, 255, 255, 0.18);
   --shadow: rgba(0, 0, 0, 0.35);
-  --accentA: #8b5cf6;
-  --accentB: #22d3ee;
-  --accentC: #fb7185;
+  --accentA: #06b6d4;
+  --accentB: #f59e0b;
+  --accentC: #ef4444;
   --radius: 20px;
   --max: 1080px;
 }
@@ -20,8 +22,8 @@
 html[data-theme="light"] {
   /* 浅色主题变量覆盖：不改结构，只改变量，切换更“丝滑” */
   color-scheme: light;
-  --bg0: #f7f8ff;
-  --bg1: #eef1ff;
+  --bg0: #f7f6f1;
+  --bg1: #f2ede1;
   --text: rgba(10, 12, 22, 0.92);
   --muted: rgba(10, 12, 22, 0.7);
   --glass: rgba(255, 255, 255, 0.6);
@@ -45,8 +47,8 @@ html {
 
 body {
   margin: 0;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
-    Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, Segoe UI,
+    Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
   background: radial-gradient(1100px 700px at 20% 10%, var(--bg1), var(--bg0));
   color: var(--text);
   overflow-x: hidden;

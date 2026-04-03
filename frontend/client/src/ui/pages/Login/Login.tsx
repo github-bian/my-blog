@@ -39,8 +39,8 @@ export default function Login() {
   return (
     <div className="blogAuthWrap">
       <Card className="blogPageCard blogAuthCard" style={{ width: "min(500px, 100%)" }}>
-        <Space direction="vertical" size={18} style={{ width: "100%" }}>
-          <Space direction="vertical" size={4}>
+        <Space orientation="vertical" size={18} style={{ width: "100%" }}>
+          <Space orientation="vertical" size={4}>
             <Typography.Text className="blogHeroKicker">Authentication</Typography.Text>
             <Typography.Title level={3} style={{ margin: 0 }}>
               {mode === "login" ? "登录博客" : "注册账号"}

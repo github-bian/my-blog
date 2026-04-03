@@ -16,6 +16,7 @@ type Props = {
   onChange?: (markdown: string) => void;
   wsUrl?: string;
 };
+
 export default function CollabEditor({
   roomName,
   user,
@@ -47,9 +48,7 @@ export default function CollabEditor({
     onChange?.(markdown);
   }, [markdown, onChange]);
 
-  const getMarkdown = useCallback((): string => {
-    return markdown;
-  }, [markdown]);
+  const getMarkdown = useCallback((): string => markdown, [markdown]);
 
   useEffect(() => {
     const el = document.getElementById("collab-editor-root");
@@ -127,40 +126,6 @@ export default function CollabEditor({
     };
   }, [isOnline, wsEndpoint]);
 
-  const toolbarGroups = useMemo(
-    () => [
-      {
-        key: "headings",
-        items: [
-          { label: "H1", action: () => prefixCurrentLine("# ") },
-          { label: "H2", action: () => prefixCurrentLine("## ") },
-          { label: "H3", action: () => prefixCurrentLine("### ") },
-        ],
-      },
-      {
-        key: "inline",
-        items: [
-          { label: "B", action: () => wrapSelection("**", "**", "粗体") },
-          { label: "I", action: () => wrapSelection("*", "*", "斜体") },
-          { label: "代码", action: () => wrapSelection("`", "`", "code") },
-          { label: "引用", action: () => prefixCurrentLine("> ") },
-        ],
-      },
-      {
-        key: "blocks",
-        items: [
-          { label: "无序", action: () => prefixCurrentLine("- ") },
-          { label: "有序", action: () => prefixCurrentLine("1. ") },
-          { label: "链接", action: () => wrapSelection("[", "](https://)", "链接文本") },
-          { label: "图片", action: () => wrapSelection("![", "](https://)", "图片描述") },
-          { label: "代码块", action: () => wrapSelection("```\n", "\n```", "在这里输入代码") },
-          { label: "分割线", action: () => insertAtCursor("\n\n---\n\n") },
-        ],
-      },
-    ],
-    [],
-  );
-
   function updateBySelection(nextValue: string, start: number, end: number) {
     setMarkdown(nextValue);
     window.requestAnimationFrame(() => {
@@ -209,6 +174,54 @@ export default function CollabEditor({
     const cursor = start + text.length;
     updateBySelection(next, cursor, cursor);
   }
+
+  const toolbarGroups = useMemo(
+    () => [
+      {
+        key: "headings",
+        items: [
+          { label: "H1", action: () => prefixCurrentLine("# ") },
+          { label: "H2", action: () => prefixCurrentLine("## ") },
+          { label: "H3", action: () => prefixCurrentLine("### ") },
+        ],
+      },
+      {
+        key: "inline",
+        items: [
+          { label: "B", action: () => wrapSelection("**", "**", "粗体") },
+          { label: "I", action: () => wrapSelection("*", "*", "斜体") },
+          { label: "代码", action: () => wrapSelection("`", "`", "code") },
+          { label: "引用", action: () => prefixCurrentLine("> ") },
+        ],
+      },
+      {
+        key: "blocks",
+        items: [
+          { label: "无序", action: () => prefixCurrentLine("- ") },
+          { label: "有序", action: () => prefixCurrentLine("1. ") },
+          { label: "链接", action: () => wrapSelection("[", "](https://)", "链接文本") },
+          { label: "图片", action: () => wrapSelection("![", "](https://)", "图片描述") },
+          { label: "代码块", action: () => wrapSelection("```\n", "\n```", "在这里输入代码") },
+          {
+            label: "Mermaid",
+            action: () =>
+              insertAtCursor(
+                "\n```mermaid\ngraph TD\n  A[开始] --> B[处理]\n  B --> C[结束]\n```\n",
+              ),
+          },
+          {
+            label: "ECharts",
+            action: () =>
+              insertAtCursor(
+                "\n```echarts\n{\n  \"xAxis\": { \"type\": \"category\", \"data\": [\"Mon\", \"Tue\", \"Wed\", \"Thu\", \"Fri\"] },\n  \"yAxis\": { \"type\": \"value\" },\n  \"series\": [{ \"type\": \"line\", \"data\": [120, 132, 101, 134, 90], \"smooth\": true }]\n}\n```\n",
+              ),
+          },
+          { label: "分割线", action: () => insertAtCursor("\n\n---\n\n") },
+        ],
+      },
+    ],
+    [markdown],
+  );
 
   return (
     <div id="collab-editor-root" className="collabEditor">
@@ -269,6 +282,12 @@ export default function CollabEditor({
         </div>
       </div>
 
+      <div className="collabEditor__syntaxTips">
+        <strong>高级预览语法</strong>
+        <span>Mermaid: 使用 <code>```mermaid</code> 代码块。</span>
+        <span>ECharts: 使用 <code>```echarts</code> 并写入 JSON 配置。</span>
+      </div>
+
       {previewMode ? (
         <div className="collabEditor__preview">
           <MarkdownArticle content={markdown} className="collabEditor__previewMarkdown" />
@@ -286,7 +305,6 @@ export default function CollabEditor({
   );
 }
 
-/** 从 DOM 获取编辑器内容（供父组件提交时调用） */
 export function getEditorMarkdown(): string {
   const el = document.getElementById("collab-editor-root");
   return (el as any)?.__getMarkdown?.() ?? "";

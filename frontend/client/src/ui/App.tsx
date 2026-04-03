@@ -13,6 +13,7 @@ const CategoryList = lazy(() => import("./pages/CategoryList/CategoryList"));
 const TagList = lazy(() => import("./pages/TagList/TagList"));
 const Archive = lazy(() => import("./pages/Archive/Archive"));
 const About = lazy(() => import("./pages/About/About"));
+const QQHKXHome = lazy(() => import("./pages/QQHKX/QQHKXHome"));
 const UserProfile = lazy(() => import("./pages/User/UserProfile"));
 const Editor = lazy(() => import("./pages/Editor/Editor"));
 const Settings = lazy(() => import("./pages/Settings/Settings"));
@@ -60,6 +61,7 @@ export function App() {
   return (
     <AuthProvider>
       <Routes>
+        <Route path="/qqhkx" element={<QQHKXHome />} />
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Home />} />
           <Route path="posts" element={<PostList />} />

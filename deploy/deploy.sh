@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
-# ============================================================
-#  一键部署脚本 — 将项目部署到远程服务器
-#  用法: bash deploy/deploy.sh
-# ============================================================
+# 一键部署 BianBlog 到远程服务器
 set -euo pipefail
 
 SERVER_IP="${SERVER_IP:-47.116.213.118}"
@@ -14,7 +11,7 @@ SSH_CMD="sshpass -e ssh -o StrictHostKeyChecking=no"
 SCP_CMD="sshpass -e scp -o StrictHostKeyChecking=no"
 
 echo "========================================="
-echo "  博客项目部署脚本"
+echo "  BianBlog 部署脚本"
 echo "  目标: ${SERVER_USER}@${SERVER_IP}"
 echo "  远程目录: ${REMOTE_DIR}"
 echo "========================================="
@@ -33,10 +30,9 @@ rsync -avz --progress -e "sshpass -e ssh -o StrictHostKeyChecking=no" \
   --exclude='__pycache__' \
   --exclude='.git' \
   --exclude='instance' \
+    --exclude='backend' \
+    --exclude='frontend' \
   --exclude='*.pyc' \
-  --exclude='frontend/client/dist' \
-  --exclude='frontend/client/node_modules' \
-  --exclude='frontend/node_modules' \
   ./ ${SERVER_USER}@${SERVER_IP}:${REMOTE_DIR}/
 
 # 3) 复制生产环境变量
@@ -44,9 +40,9 @@ echo ""
 echo "[3/5] 复制环境变量文件..."
 ${SCP_CMD} deploy/.env.production ${SERVER_USER}@${SERVER_IP}:${REMOTE_DIR}/.env
 
-# 4) 在远程服务器上构建 & 启动
+# 4) 在远程服务器上启动
 echo ""
-echo "[4/5] 在远程服务器上构建并启动 Docker 容器..."
+echo "[4/5] 在远程服务器上启动 Docker 容器..."
 ${SSH_CMD} ${SERVER_USER}@${SERVER_IP} << 'REMOTE_SCRIPT'
 set -euo pipefail
 cd /opt/blog
@@ -62,8 +58,8 @@ fi
 # 停止旧容器（如有）
 docker compose -f docker-compose.prod.yml down 2>/dev/null || true
 
-# 构建并启动（清除缓存确保依赖更新）
-docker compose -f docker-compose.prod.yml build --no-cache
+# 构建并启动 BianBlog 容器
+docker compose -f docker-compose.prod.yml build --no-cache bianblog
 docker compose -f docker-compose.prod.yml up -d
 
 echo ""
@@ -79,21 +75,21 @@ echo ""
 echo "[5/5] 健康检查..."
 sleep 5
 
-if curl -sS --connect-timeout 10 "http://${SERVER_IP}/health" | grep -q '"ok"'; then
-    echo "✅ 后端 API 健康检查通过"
+if curl -sS --connect-timeout 10 "http://${SERVER_IP}/" >/dev/null; then
+    echo "✅ BianBlog 前台可访问"
 else
-    echo "⚠️  后端 API 尚未就绪（可能还在初始化数据库，请稍后重试）"
+    echo "⚠️  BianBlog 前台尚未就绪"
 fi
 
-if curl -sS --connect-timeout 10 "http://${SERVER_IP}/" | grep -q 'root'; then
-    echo "✅ 前端页面可访问"
+if curl -sS --connect-timeout 10 "http://${SERVER_IP}/admin/init" >/dev/null; then
+    echo "✅ 后台初始化页面可访问"
 else
-    echo "⚠️  前端页面尚未就绪"
+    echo "⚠️  后台初始化页面尚未就绪"
 fi
 
 echo ""
 echo "========================================="
 echo "  部署完成！"
-echo "  前端: http://${SERVER_IP}"
-echo "  API:  http://${SERVER_IP}/api/v1/"
+echo "  前台: http://${SERVER_IP}"
+echo "  后台初始化: http://${SERVER_IP}/admin/init"
 echo "========================================="

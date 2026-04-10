@@ -3,7 +3,7 @@ const normalizeURL = (url: string) => new URL(url).toString();
 // 从环境变量中读取.
 export const config = {
   baseUrl: normalizeURL(
-    process.env.BIAN_BLOG_SERVER_URL ?? "http://localhost:3000"
+    process.env.BIAN_BLOG_SERVER_URL ?? "http://localhost:3100"
   ),
 };
 

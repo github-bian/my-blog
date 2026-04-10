@@ -34,7 +34,7 @@ RUN pnpm build
 FROM node:18-alpine AS WEBSITE_BUILDER
 WORKDIR /app
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
-    apk add --update python3 make g++ && rm -rf /var/cache/apk/*
+    apk add --update python3 make g++ vips-dev && rm -rf /var/cache/apk/*
 ENV npm_config_sharp_binary_host=https://npmmirror.com/mirrors/sharp/
 ENV npm_config_sharp_libvips_binary_host=https://npmmirror.com/mirrors/sharp-libvips/
 ENV SHARP_DIST_BASE_URL=https://npmmirror.com/mirrors/sharp-libvips/

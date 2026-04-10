@@ -1,12 +1,6 @@
 services:
   bianblog:
-    build:
-      context: ./vanblog
-      dockerfile: Dockerfile
-      args:
-        BIAN_BLOG_BUILD_SERVER: http://127.0.0.1:3000
-        BIAN_BLOG_VERSIONS: bianblog-local
-    image: bianblog:local
+    image: mereith/bian-blog:latest
     container_name: bianblog_app
     restart: always
     depends_on:
@@ -28,6 +22,7 @@ services:
     image: mongo:4.4.16
     container_name: bianblog_mongo
     restart: always
+    command: --noauth
     environment:
       TZ: ${TZ:-Asia/Shanghai}
     volumes:

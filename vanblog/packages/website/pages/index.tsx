@@ -29,6 +29,17 @@ const Home = (props: IndexPageProps) => {
           content={getArticlesKeyWord(props.articles).join(",")}
         ></meta>
       </Head>
+      <section className="neo-lux-hero mb-3 md:mb-5">
+        <div className="flex flex-wrap gap-2 mb-3">
+          <span className="neo-lux-chip">Neo Luxury</span>
+          <span className="neo-lux-chip">Black Gold</span>
+          <span className="neo-lux-chip">Glass Layer</span>
+        </div>
+        <h1 className="neo-lux-title">{props.layoutProps.siteName}</h1>
+        <p className="neo-lux-desc">
+          {props.layoutProps.description || props.authorCardProps.desc}
+        </p>
+      </section>
       <div className="space-y-3 md:space-y-5">
         {props.articles.map((article) => (
           <PostCard

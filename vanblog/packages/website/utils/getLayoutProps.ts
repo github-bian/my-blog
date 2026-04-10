@@ -163,10 +163,11 @@ export function getAuthorCardProps(data: PublicMetaProp): AuthorCardProps {
     tagNum: data.tags.length,
     catelogNum: data.meta.categories.length,
     socials: data.meta.socials,
-    author: data.meta.siteInfo.author,
-    desc: data.meta.siteInfo.authorDesc,
-    logo: data.meta.siteInfo.authorLogo,
-    logoDark: data.meta.siteInfo.authorLogoDark || "",
+    author: data.meta.siteInfo?.author || "",
+    // 兼容老数据中的 authDesc 字段命名
+    desc: data.meta.siteInfo?.authorDesc || data.meta.siteInfo?.authDesc || "",
+    logo: data.meta.siteInfo?.authorLogo || "",
+    logoDark: data.meta.siteInfo?.authorLogoDark || "",
     showSubMenu: showSubMenu ? "true" : "false",
     showRSS,
   };

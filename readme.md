@@ -23,6 +23,19 @@ docker compose up -d
 - 前台: `http://localhost:8080`
 - 后台初始化: `http://localhost:8080/admin/init`
 
+## 本地源码开发端口（当前工作区）
+
+当你使用 `vanblog/packages/*` 的 `pnpm dev` 方式本地调试时，端口如下：
+
+- 后端 API: `http://localhost:3100`
+- 前台: `http://localhost:3001`
+- 管理后台: `http://localhost:3002/admin/user/login`
+
+当前本地初始化的管理员账号：
+
+- 用户名: `admin`
+- 密码: `Admin@123456`
+
 3. 初始化完成后
 
 - 使用你在初始化时创建的管理员账号登录后台

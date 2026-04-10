@@ -26,6 +26,7 @@ import rawHTML from './rawHTML';
 import { Heading } from './plugins/heading';
 import { customCodeBlock } from './plugins/codeBlock';
 import { LinkTarget } from './plugins/linkTarget';
+import { mermaidCompat } from './plugins/mermaidCompat';
 
 const sanitize = (schema) => {
   schema.protocols.src.push('data');
@@ -61,6 +62,7 @@ export default function EditorComponent(props: {
       frontmatter(),
       math({ locale: cn }),
       mediumZoom(),
+      mermaidCompat(),
       mermaid({ locale: cn }),
       imgUploadPlugin(setLoading),
       emoji(),
